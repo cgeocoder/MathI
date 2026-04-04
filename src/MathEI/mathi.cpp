@@ -117,7 +117,7 @@ static bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	if (is_elem_exist(_Tokens, _Offset + 1)) {
 		TokenType next_type = _Tokens.at(_Offset + 1).type;
 
-		bool next_expr = (next_type >= expr_num_const && next_type <= var_enum);
+		bool next_expr = (next_type >= expr_num_const && next_type <= var_enum) || next_type == sym_lpar;
 
 		if (next_expr) {
 			set_syntax_error({

@@ -178,7 +178,6 @@ bool Tokenizer::parse(const std::string& _Str) {
 
 	for (size_t i = 0; i < length; ++i) {
 		if (_Str.at(i) == '#') {
-			__debugbreak();
 			return true;
 		}
 		else if (is_name(_Str.at(i))) {
@@ -234,7 +233,7 @@ bool Tokenizer::parse(const std::string& _Str) {
 
 			while (end < length && (is_number(_Str.at(end)) || (_Str.at(end) == '.'))) {
 				if (dot && (_Str.at(end) == '.')) {
-					std::cout << "Invalid floating constant '" << _Str.substr(i, end) << "'\n";
+					std::cout << "mathi: parser: invalid floating constant '" << _Str.substr(i, end) << "'\n";
 					return false;
 				}
 				else if (_Str.at(end) == '.')
@@ -329,7 +328,7 @@ bool Tokenizer::parse(const std::string& _Str) {
 				i += 1;
 			}
 			else {
-				std::cout << "Invalid character constant '!'\n";
+				std::cout << "mathi: parser: invalid character '" << _Str.at(i) << "'\n";
 				return false;
 			}
 		}
@@ -362,6 +361,10 @@ bool Tokenizer::parse(const std::string& _Str) {
 					_Str.substr(i, 1), i, i + 1
 				});
 			}
+		}
+		else if (_Str.at(i) != ' ' && _Str.at(i) != '\t' && _Str.at(i) != '\n') {
+			std::cout << "mathi: parser: invalid character '" << _Str.at(i) << "'\n";
+			return false;
 		}
 	}
 
