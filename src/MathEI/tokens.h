@@ -166,7 +166,7 @@ bool is_expr_bin_op(TokenType* t);
 bool cond_after_expr(TokenType* t);
 bool is_expr_func_call(TokenType* t);
 bool cond_before_expr_un_op(TokenType* t);
-bool is_cond_if_part(TokenType* t);
+// bool is_cond_if_part(TokenType* t);
 bool is_cond_if_part_enum(TokenType* t);
 bool is_cond_else_part(TokenType* t);
 bool is_expr_cond(TokenType* t);

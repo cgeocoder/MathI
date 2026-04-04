@@ -21,7 +21,7 @@ static bool expr_cond_rule(std::vector<Token>&, size_t);
 
 struct SyntaxErrorInfo {
 	std::string info;
-	size_t start, end;
+	size_t start = 0, end = 0;
 };
 
 SyntaxErrorInfo syntax_error_info;
@@ -70,6 +70,16 @@ static bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 		if (next_expr) {
 			set_syntax_error({
 				"the expression cannot follow the expression",
+				_Tokens.at(_Offset).start, 
+				_Tokens.at(_Offset + 1).end
+			});
+
+			return false;
+		}
+
+		if ((next_type == sym_else) && !is_condition_stack.top()) {
+			set_syntax_error({
+				"the 'else' cannot follow the expression",
 				_Tokens.at(_Offset).start, 
 				_Tokens.at(_Offset + 1).end
 			});
@@ -125,6 +135,16 @@ static bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 			set_syntax_error({
 				"an expression cannot go after a constant",
 				_Tokens.at(_Offset).start, 
+				_Tokens.at(_Offset + 1).end
+			});
+
+			return false;
+		}
+
+		if ((next_type == sym_else) && !is_condition_stack.top()) {
+			set_syntax_error({
+				"the 'else' cannot follow the expression",
+				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
 			});
 
