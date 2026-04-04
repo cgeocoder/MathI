@@ -17,7 +17,7 @@ static bool expr_par_rule(std::vector<Token>&, size_t);
 static bool expr_var_rule(std::vector<Token>&, size_t);
 static bool expr_num_const_rule(std::vector<Token>&, size_t);
 static bool expr_func_decl_rule(std::vector<Token>&, size_t);
-// static bool expr_cond_rule(std::vector<Token>&, size_t);
+static bool expr_cond_rule(std::vector<Token>&, size_t);
 
 struct SyntaxErrorInfo {
 	std::string info;
@@ -25,6 +25,7 @@ struct SyntaxErrorInfo {
 };
 
 SyntaxErrorInfo syntax_error_info;
+std::stack<bool> is_condition_stack;
 
 void set_syntax_error(const SyntaxErrorInfo& _Error) {
 	if (!global_rule_state)
@@ -46,12 +47,13 @@ void print_syntax_error(const std::string& _Src, const SyntaxErrorInfo& _ErrorIn
 static bool expr_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return global_rule_state && 
 		(expr_un_op_rule(_Tokens, _Offset)
-		|| expr_bin_op_rule(_Tokens, _Offset)
-		|| expr_func_decl_rule(_Tokens, _Offset)
-		|| expr_par_rule(_Tokens, _Offset)
-		|| expr_enum_rule(_Tokens, _Offset)
-		|| expr_var_rule(_Tokens, _Offset)
-		|| expr_num_const_rule(_Tokens, _Offset));
+			|| expr_bin_op_rule(_Tokens, _Offset)
+			|| expr_func_decl_rule(_Tokens, _Offset)
+			|| ((!is_condition_stack.top()) && expr_cond_rule(_Tokens, _Offset))
+			|| expr_par_rule(_Tokens, _Offset)
+			|| ((!is_condition_stack.top()) && expr_enum_rule(_Tokens, _Offset))
+			|| expr_var_rule(_Tokens, _Offset)
+			|| expr_num_const_rule(_Tokens, _Offset));
 }
 
 static bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset) {
@@ -261,7 +263,10 @@ static bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 
 	do {
 		current_size = _Tokens.size();
+
+		is_condition_stack.push(false);
 		next_expr = expr_rule(_Tokens, _Offset + 1);
+		is_condition_stack.pop();
 
 		if (!next_expr && (current_size != _Tokens.size())) {
 			set_syntax_error({
@@ -329,7 +334,10 @@ static bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 
 	do {
 		current_size = _Tokens.size();
+
+		is_condition_stack.push(false);
 		next_expr = expr_rule(_Tokens, _Offset + 2);
+		is_condition_stack.pop();
 
 		if (!next_expr && (current_size != _Tokens.size())) {
 			set_syntax_error({
@@ -370,7 +378,9 @@ static bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	bool next_assign_op = (_Tokens.size() > _Offset + 5) && (_Tokens.at(_Offset + 4).type == bin_op_assign);
 
 	if ((expr_type == var_enum || expr_type == expr_var) && next_assign_op) {
+		is_condition_stack.push(false);
 		next_expr = expr_rule(_Tokens, _Offset + 5);
+		is_condition_stack.pop();
 
 		if (!next_expr || (_Tokens.at(_Offset + 5).type == stmt_func_decl)) {
 			set_syntax_error({
@@ -399,9 +409,8 @@ static bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return true;
 }
 
-/*static bool expr_cond_rule(std::vector<Token>& _Tokens, size_t _Offset) {
-	if (_Tokens.size() <= _Offset + 2)
-		return false;
+static bool expr_cond_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+	size_t local_offset = 0;
 
 	TokenType current_type = _Tokens.at(_Offset).type;
 
@@ -410,62 +419,139 @@ static bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	if (!current_expr)
 		return false;
 
-	if (_Tokens.at(_Offset + 1).type != sym_if)
+	if (!is_elem_exist(_Tokens, _Offset + 1) || (_Tokens.at(_Offset + 1).type != sym_if))
 		return false;
+
+	if (!is_elem_exist(_Tokens, _Offset + 2)) {
+		set_syntax_error({
+			"after 'if' the expression is expected",
+			_Tokens.at(_Offset + 1).start,
+			_Tokens.at(_Offset + 1).end
+		});
+
+		return false;
+	}
 
 _if_cycle:
-	cond_stack.push(true);
-	bool next_expr = expr_rule(_Tokens, _Offset + 2);
-	cond_stack.pop();
+	
+	bool next_expr;
+	size_t current_size;
 
-	__debugbreak();
+	do {
+		current_size = _Tokens.size();
 
-	bool next_sym_comma = (_Tokens.size() > _Offset + 3) && (_Tokens.at(_Offset + 3).type == sym_comma);
+		is_condition_stack.push(true);
+		next_expr = expr_rule(_Tokens, _Offset + 2 + local_offset);
+		is_condition_stack.pop();
 
-	__debugbreak();
+		if (!next_expr && (current_size != _Tokens.size())) {
+			set_syntax_error({
+				"after 'if' the expression is expected",
+				_Tokens.at(_Offset + 1).start,
+				_Tokens.at(_Offset + 2).end
+			});
+
+			return false;
+		}
+
+	} while (current_size != _Tokens.size());
+
+	if (!is_elem_exist(_Tokens, _Offset + 3 + local_offset)) {
+		set_syntax_error({
+			"after expression the ',' is expected",
+			_Tokens.at(_Offset + 2 + local_offset).start,
+			_Tokens.at(_Offset + 2 + local_offset).end
+		});
+
+		return false;
+	}
+
+	bool next_sym_comma = (_Tokens.at(_Offset + 3 + local_offset).type == sym_comma);
 
 	if (!next_sym_comma) {
-		std::cout << "The ',' is expected after 'if': ["
-			<< _Tokens.at(_Offset + 3).start << ", "
-			<< _Tokens.at(_Offset + 3).end << "]\n";
+		set_syntax_error({
+			"after expression the ',' is expected",
+			_Tokens.at(_Offset + 2 + local_offset).start,
+			_Tokens.at(_Offset + 3 + local_offset).end
+		});
 
 		return false;
 	}
 
-	next_expr = (_Tokens.size() > _Offset + 4) && expr_rule(_Tokens, _Offset + 4);
-
-	if (!next_expr) {
-		std::cout << "The expr is expected after ',': ["
-			<< _Tokens.at(_Offset + 4).start << ", "
-			<< _Tokens.at(_Offset + 4).end << "]\n";
-
-		return false;
-	}
-
-	if (_Tokens.size() <= _Offset + 5) {
-		std::cout << "The 'if'/'else' is expected after expr: ["
-			<< _Tokens.at(_Offset + 4).start << ", "
-			<< _Tokens.at(_Offset + 4).end << "]\n";
+	if (!is_elem_exist(_Tokens, _Offset + 4 + local_offset)) {
+		set_syntax_error({
+			"after ',' the expression is expected",
+			_Tokens.at(_Offset + 3 + local_offset).start,
+			_Tokens.at(_Offset + 3 + local_offset).end
+		});
 
 		return false;
 	}
 
-	TokenType if_else_type = _Tokens.at(_Offset + 5).type;
+	// is_condition_stack.push(true);
+	// next_expr = expr_rule(_Tokens, _Offset + 4 + local_offset);
+	// is_condition_stack.pop();
 
-	if (if_else_type == sym_if) {
+	do {
+		current_size = _Tokens.size();
+
+		is_condition_stack.push(true);
+		next_expr = expr_rule(_Tokens, _Offset + 4 + local_offset);
+		is_condition_stack.pop();
+
+		if (!next_expr && (current_size != _Tokens.size())) {
+			set_syntax_error({
+				"after ',' the expression is expected",
+				_Tokens.at(_Offset + 3).start,
+				_Tokens.at(_Offset + 4).end
+			});
+
+			return false;
+		}
+
+	} while (current_size != _Tokens.size());
+
+	// Next may be 'if' or 'else'
+
+	if (!is_elem_exist(_Tokens, _Offset + 5 + local_offset)) {
+		set_syntax_error({
+			"after expression the 'if' or 'else' is expected",
+			_Tokens.at(_Offset + 4 + local_offset).start,
+			_Tokens.at(_Offset + 4 + local_offset).end
+		});
+
+		return false;
+	}
+
+	TokenType next_token_type = _Tokens.at(_Offset + 5 + local_offset).type;
+
+	if (next_token_type == sym_if) {
+		local_offset += 4;
+
 		goto _if_cycle;
 	}
-	else if (if_else_type == sym_else) {
+	else if (next_token_type == sym_else) {
+		_Tokens.erase(
+			std::next(_Tokens.begin(), _Offset),
+			std::next(_Tokens.begin(), _Offset + 5 + local_offset)
+		);
+		
+		_Tokens.at(_Offset).type = expr_cond;
 
+		return true;
 	}
 	else {
-		std::cout << "The 'if'/'else' is expected after expr: ["
-			<< _Tokens.at(_Offset + 4).start << ", "
-			<< _Tokens.at(_Offset + 4).end << "]\n";
+		set_syntax_error({
+			"after expression the 'if' or 'else' is expected",
+			_Tokens.at(_Offset + 4 + local_offset).start,
+			_Tokens.at(_Offset + 4 + local_offset).end
+		});
 
 		return false;
 	}
-}*/
+
+	return false;
+}
 
 static bool rule(std::vector<Token>& _Tokens) {
 	do {
@@ -493,7 +579,9 @@ double MathI::eval(const std::string& _Str) {
 
 		std::vector<Token> token_array{ tokens.m_Tokens };
 
+		is_condition_stack.push(false);
 		bool current_expr = rule(token_array);
+		is_condition_stack.pop();
 
 		if (!current_expr) {
 			print_syntax_error(sub_str, syntax_error_info);
