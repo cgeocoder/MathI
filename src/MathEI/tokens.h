@@ -41,7 +41,7 @@ enum TokenType {
 
 	bool_un_op_not,
 
-	// bool_un_op,
+	un_op_sub,
 
 	// ## MathEI Expression
 
@@ -144,7 +144,6 @@ public:
 class Tokenizer {
 	friend class MathI;
 	friend class Parser;
-	friend class EvalTree;
 
 private:
 	std::vector<Token> m_Tokens;
@@ -154,25 +153,5 @@ public:
 
 	bool parse(const std::string& _Str);
 };
-
-bool is_expr(TokenType* t);
-bool is_stmt(TokenType* t);
-bool is_un_op(TokenType* t);
-bool is_bin_op(TokenType* t);
-bool is_expr_par(TokenType* t);
-bool is_expr_enum(TokenType* t);
-bool is_expr_un_op(TokenType* t);
-bool is_expr_bin_op(TokenType* t);
-bool cond_after_expr(TokenType* t);
-bool is_expr_func_call(TokenType* t);
-bool cond_before_expr_un_op(TokenType* t);
-// bool is_cond_if_part(TokenType* t);
-bool is_cond_if_part_enum(TokenType* t);
-bool is_cond_else_part(TokenType* t);
-bool is_expr_cond(TokenType* t);
-bool is_var_enum(TokenType* t);
-bool is_stmt_func_decl(TokenType* t);
-bool is_final_instruction(TokenType* t);
-
 
 #endif // !__TOKENS_H__

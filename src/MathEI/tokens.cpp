@@ -298,10 +298,28 @@ bool Tokenizer::parse(const std::string& _Str) {
 			});
 		}
 		else if (_Str.at(i) == '-') {
-			m_Tokens.push_back({
-				TokenType::bin_op_sub,
-				_Str.substr(i, 1), i, i + 1
-			});
+			if (m_Tokens.size() == 0) {
+				m_Tokens.push_back({
+					TokenType::un_op_sub,
+					_Str.substr(i, 1), i, i + 1
+				});
+			}
+			else {
+				TokenType prev_type = m_Tokens.at(m_Tokens.size() - 1).type;
+
+				if (prev_type != expr_num_const && prev_type != expr_var && prev_type != sym_rpar) {
+					m_Tokens.push_back({
+						TokenType::un_op_sub,
+						_Str.substr(i, 1), i, i + 1
+					});
+				}
+				else {
+					m_Tokens.push_back({
+						TokenType::bin_op_sub,
+						_Str.substr(i, 1), i, i + 1
+					});
+				}
+			}
 		}
 		else if (_Str.at(i) == '=') {
 			if (i + 1 < length && _Str.at(i + 1) == '=') {

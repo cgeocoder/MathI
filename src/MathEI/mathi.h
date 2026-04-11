@@ -8,7 +8,7 @@
 
 class MathI {
 private:
-	// GrammarRule rules;
+	
 
 public:
 	double eval(const std::string& _Str);
