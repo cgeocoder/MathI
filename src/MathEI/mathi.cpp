@@ -59,6 +59,14 @@ size_t find_type_in_range_ast(TokenType type, const std::vector<AST*>& ast, cons
 				return i;
 		}
 	}
+	else if (type == bin_op_pow) {
+		// right- associative operator
+
+		for (long long i = range.second - 1; i >= (long long)range.first; --i) {
+			if (ast.at(i)->token.type == type)
+				return i;
+		}
+	}
 	else {
 		for (size_t i = range.first; i < range.second; ++i) {
 			if (ast.at(i)->token.type == type)
@@ -113,6 +121,8 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 	}
 
 	// 1. pow
+
+	__debugbreak();
 
 	while ((operator_pos = find_type_in_range_ast(bin_op_pow, ast, range)) != std::string::npos) {
 		ast.at(operator_pos)->token.type = expr_bin_op;
@@ -232,10 +242,12 @@ AST* geterate_ast(const std::vector<Token>& _Tokens) {
 		ast.push_back(new AST(token));
 	}
 
+	__debugbreak();
+
 	while (ast.size() != 1) {
 		std::pair<size_t, size_t> parse_range = get_parse_range(ast);
 
-		// __debugbreak();
+		__debugbreak();
 
 		generate_range_ast(ast, parse_range);
 	}
@@ -267,8 +279,6 @@ double MathI::eval(const std::string& _Str) {
 			print_syntax_error(sub_str, syntax_error_info);
 			break;
 		}
-
-		// __debugbreak();
 
 		AST* ast = geterate_ast(tokens.m_Tokens);
 

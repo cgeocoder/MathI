@@ -83,7 +83,7 @@ bool expr_un_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 			"the expression is expected after the unary operator",
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset + 1).end
-			});
+		});
 
 		return false;
 	}
@@ -392,9 +392,11 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	bool next_assign_op = (_Tokens.size() > _Offset + 5) && (_Tokens.at(_Offset + 4).type == bin_op_assign);
 
 	if ((expr_type == var_enum || expr_type == expr_var) && next_assign_op) {
-		is_condition_stack.push(false);
-		next_expr = expr_rule(_Tokens, _Offset + 5);
-		is_condition_stack.pop();
+		while (is_elem_exist(_Tokens, _Offset + 6)) {
+			is_condition_stack.push(false);
+			next_expr = expr_rule(_Tokens, _Offset + 5);
+			is_condition_stack.pop();
+		}
 
 		if (!next_expr || (_Tokens.at(_Offset + 5).type == stmt_func_decl)) {
 			set_syntax_error({

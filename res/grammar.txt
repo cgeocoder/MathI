@@ -1,0 +1,147 @@
+# Grammar of Mathematical Expression Interpreter (MathEI)
+
+sym_comma ::= ','
+sym_semicolon ::= ';'
+sym_lpar ::= '('
+sym_rpar ::= ')'
+
+## Binary Operators
+
+bin_op_pow ::= '^'
+bin_op_mul ::= '*'
+bin_op_div ::= '/'
+bin_op_add ::= '+'
+bin_op_sub ::= '-'
+bin_op_assign ::= '='
+
+bin_op ::= bin_op_pow
+bin_op ::= bin_op_mul
+bin_op ::= bin_op_div
+bin_op ::= bin_op_add
+bin_op ::= bin_op_sub
+bin_op ::= bin_op_assign
+
+## Unary Operators
+
+unary_op ::= bin_op_sub
+
+## Boolean Binary Operators
+
+bool_bin_op_less ::= '<'
+bool_bin_op_more ::= '>'
+bool_bin_op_less_eq ::= '<='
+bool_bin_op_more_eq ::= '>='
+bool_bin_op_eq ::= '=='
+bool_bin_op_not_eq ::= '!='
+bool_bin_op_and ::= 'and'
+bool_bin_op_or ::= 'or'
+
+bool_bin_op ::= bool_bin_op_less
+bool_bin_op ::= bool_bin_op_more
+bool_bin_op ::= bool_bin_op_less_eq
+bool_bin_op ::= bool_bin_op_more_eq
+bool_bin_op ::= bool_bin_op_eq 
+bool_bin_op ::= bool_bin_op_not_eq 
+bool_bin_op ::= bool_bin_op_and
+bool_bin_op ::= bool_bin_op_or 
+
+## Boolean Unary Operators
+bool_un_op ::= 'not'
+
+## MathEI Expression
+expr ::= expr_num_const
+expr ::= expr_var
+expr ::= expr_un_op
+expr ::= expr_bin_op
+expr ::= expr_par
+expr ::= expr_func_call
+expr ::= expr_cond
+expr ::= expr_enum
+expr ::= var_enum
+
+## MathEI Boolean Expression
+bool_expr ::= bool_expr_un_op
+bool_expr ::= bool_expr_bin_op
+bool_expr ::= bool_expr_ter_op
+
+## Unit of expressions
+### Variable
+expr_var ::= [a-zA-Z_0-9]+
+
+### Numeric Constant Expression
+expr_num_const ::= [0-9]+
+expr_num_const ::= [0-9]+ '.' [0-9]+
+expr_num_const ::= 'inf'
+
+### Expressions Enumerate
+	| next not (lpar)
+
+expr_enum ::= expr ',' expr
+expr_enum ::= expr ',' expr_enum
+
+### Unary Operation Expression 
+	| prev not (expr_num_const, expr_var, sym_rpar)
+	| next not (lpar)
+
+expr_un_op ::= unary_op expr
+
+### Binary Operation Expression
+	| next not (lpar)
+
+expr_bin_op ::= expr bin_op expr
+
+### Parentheses Expression
+expr_par ::= '(' expr ')'
+
+### Function Call Expression
+expr_func_call ::= expr_var expr_par
+
+### Condition If-part
+cond_if_part ::= expr 'if' bool_expr
+
+### Condition If-part enum
+cond_if_part_enum ::= cond_if_part ',' cond_if_part
+cond_if_part_enum ::= cond_if_part ',' cond_if_part_enum
+
+### Condition Else-part
+cond_else_part ::= expr 'else' 
+
+### Condition Expression
+expr_cond ::= cond_if_part_enum ',' cond_else_part
+expr_cond ::= cond_if_part ',' cond_else_part
+
+### Boolean Binary Operation Expression
+	| next not (lpar)
+
+bool_expr_bin_op ::= expr bool_bin_op expr
+
+### Ternary Binary Operation Expression
+	| next not (lpar)
+
+bool_expr_ter_op ::= expr bool_bin_op expr bool_bin_op expr
+
+### Boolean Unary Operation Expression
+	| next not (lpar)
+
+bool_expr_un_op ::= bool_un_op expr
+
+# Unit of Statements
+
+## Variable Enumeration
+	| next not (lpar)
+
+var_enum ::= expr_var ',' expr_var
+var_enum ::= expr_var ',' var_enum
+
+### Function Declaration
+	| next not (lpar)
+
+stmt_func_decl ::= expr_var '(' expr_var ')' '=' expr
+stmt_func_decl ::= expr_var '(' var_enum ')' '=' expr
+
+stmt ::= stmt_func_decl
+
+final_instruction ::= expr ';'
+final_instruction ::= stmt ';'
+
+program ::= final_instruction
