@@ -74,6 +74,52 @@ enum TokenType {
 	final_instruction,
 };
 
+enum class Opcode : size_t {
+	// push [id]
+	// id - index of value
+	push,
+
+	// push value
+	push_const,
+
+	// pop
+	pop,
+
+	bin_op,
+	bo_pow = bin_op_pow,
+	bo_mul = bin_op_mul,
+	bo_div = bin_op_div,
+	bo_add = bin_op_add,
+	bo_sub = bin_op_sub,
+	bo_assign = bin_op_assign,
+	bo_less = bool_bin_op_less,
+	bo_less_eq = bool_bin_op_less_eq,
+	bo_more = bool_bin_op_more,
+	bo_more_eq = bool_bin_op_more_eq,
+	bo_eq = bool_bin_op_eq,
+	bo_not_eq = bool_bin_op_not_eq,
+	bo_and = bool_bin_op_and,
+	bo_or = bool_bin_op_or,
+
+	un_op,
+	uo_neg,
+	uo_not,
+
+	// call [address]
+	// address - a number point to the function
+	call,
+
+	// call [address]
+	store,
+
+	// clear program stack
+	clear_stack,
+
+	// stop program
+	halt,
+};
+
+
 class Token {
 public:
 	inline Token(
