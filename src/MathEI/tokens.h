@@ -79,8 +79,14 @@ enum class Opcode : size_t {
 	// id - index of value
 	push,
 
-	// push value
+	// push [value]
 	push_const,
+
+	// push_tmp [f_addr] [index]
+	push_tmp,
+
+	// store_tmp [f_addr] [index]
+	store_tmp,
 
 	// pop
 	pop,
@@ -105,11 +111,11 @@ enum class Opcode : size_t {
 	uo_neg,
 	uo_not,
 
-	// call [address]
-	// address - a number point to the function
+	// call [address] [count of passed parameters]
 	call,
 
-	// call [address]
+	// store [address]
+	// store a value in a program stack
 	store,
 
 	// clear program stack
