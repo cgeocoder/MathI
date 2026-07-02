@@ -1,3 +1,2 @@
 # MathI
-
-### Interpreter of a math expressions
+Interpreter of a math expressions
