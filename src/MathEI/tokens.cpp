@@ -90,26 +90,6 @@ bool is_bool_expr_un_op(TokenType* t) {
 		&& cond_after_expr(&t[2]);
 }
 
-// Look ahead - 2
-bool is_cond_if_part_enum(TokenType* t) {
-	return t[0] == cond_if_part
-		&& t[1] == sym_comma
-		&& (t[2] == cond_if_part || t[2] == cond_if_part_enum);
-}
-
-// Look ahead - 1
-bool is_cond_else_part(TokenType* t) {
-	return is_expr(&t[0])
-		&& t[1] == sym_else;
-}
-
-// Look ahead - 2
-bool is_expr_cond(TokenType* t) {
-	return (t[0] == cond_if_part || t[0] == cond_if_part_enum)
-		&& t[1] == sym_comma
-		&& t[2] == cond_else_part;
-}
-
 // Look ahead - 3
 bool is_var_enum(TokenType* t) {
 	return t[0] == expr_var
@@ -203,18 +183,6 @@ bool Tokenizer::parse(const std::string& _Str) {
 			else if (val == "not") {
 				m_Tokens.push_back({
 					TokenType::bool_un_op_not,
-					_Str.substr(i, 3), i, i + 3
-				});
-			}
-			else if (val == "if") {
-				m_Tokens.push_back({
-					TokenType::sym_if,
-					_Str.substr(i, 2), i, i + 2
-				});
-			}
-			else if (val == "else") {
-				m_Tokens.push_back({
-					TokenType::sym_else,
 					_Str.substr(i, 3), i, i + 3
 				});
 			}

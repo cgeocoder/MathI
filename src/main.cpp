@@ -6,6 +6,8 @@
 int main() {
 	MathI mathi;
 
+	// ERROR: f(x) = (a = x)
+
 	while (1) {
 		std::string str;
 		std::cout << ">> ";
@@ -15,7 +17,7 @@ int main() {
 			system("cls");
 			continue;
 		}
-
+		
 		std::cout << std::to_string(mathi.eval(str)) << std::endl << std::endl;
 	}
 

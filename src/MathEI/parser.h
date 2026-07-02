@@ -24,14 +24,12 @@ bool expr_par_rule(std::vector<Token>&, size_t);
 bool expr_var_rule(std::vector<Token>&, size_t);
 bool expr_num_const_rule(std::vector<Token>&, size_t);
 bool expr_func_decl_rule(std::vector<Token>&, size_t);
-bool expr_cond_rule(std::vector<Token>&, size_t);
 
 void set_syntax_error(const SyntaxErrorInfo&);
 void print_syntax_error(const std::string&, const SyntaxErrorInfo&);
 
 inline bool global_rule_state = true;
 inline SyntaxErrorInfo syntax_error_info;
-inline std::stack<bool> is_condition_stack;
 
 
 #endif // !__PARSER_H__

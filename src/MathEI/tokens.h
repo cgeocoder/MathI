@@ -16,8 +16,6 @@ enum TokenType {
 	sym_semicolon,
 	sym_lpar,
 	sym_rpar,
-	sym_if,
-	sym_else,
 
 	// ## Binary Operators
 
@@ -56,14 +54,6 @@ enum TokenType {
 	var_enum, // for func decl
 
 	expr,
-
-	cond_if_part,
-	cond_if_part_enum,
-	cond_else_part,
-
-	// ### Unary Operation Expression
-
-	// expr_un_op,
 
 	// # Unit of Statements
 

@@ -1,15 +1,12 @@
 #include "mathi.h"
 #include "parser.h"
-#include <map>
 #include <cmath>
 
 typedef double (*b1func)(double);
 typedef double (*b2func)(double, double);
 
-
 #define CMATH_FUNC_1_ARG(name) double cmath_ ## name ## (double x) { return (double)std::name(x); }
 #define CMATH_FUNC_2_ARG(name) double cmath_ ## name ## (double x, double y) { return (double)std::name(x, y); }
-
 #define CMATH_GET_FUNC_NAME(name) cmath_ ## name
 
 CMATH_FUNC_1_ARG(abs);
@@ -29,38 +26,6 @@ CMATH_FUNC_1_ARG(sinh);
 CMATH_FUNC_1_ARG(sqrt);
 CMATH_FUNC_1_ARG(tan);
 CMATH_FUNC_1_ARG(tanh);
-CMATH_FUNC_1_ARG(acosf);
-CMATH_FUNC_1_ARG(asinf);
-CMATH_FUNC_1_ARG(atanf);
-CMATH_FUNC_1_ARG(ceilf);
-CMATH_FUNC_1_ARG(cosf);
-CMATH_FUNC_1_ARG(coshf);
-CMATH_FUNC_1_ARG(expf);
-CMATH_FUNC_1_ARG(fabsf);
-CMATH_FUNC_1_ARG(floorf);
-CMATH_FUNC_1_ARG(logf);
-CMATH_FUNC_1_ARG(log10f);
-CMATH_FUNC_1_ARG(sinf);
-CMATH_FUNC_1_ARG(sinhf);
-CMATH_FUNC_1_ARG(sqrtf);
-CMATH_FUNC_1_ARG(tanf);
-CMATH_FUNC_1_ARG(tanhf);
-CMATH_FUNC_1_ARG(acosl);
-CMATH_FUNC_1_ARG(asinl);
-CMATH_FUNC_1_ARG(atanl);
-CMATH_FUNC_1_ARG(ceill);
-CMATH_FUNC_1_ARG(cosl);
-CMATH_FUNC_1_ARG(coshl);
-CMATH_FUNC_1_ARG(expl);
-CMATH_FUNC_1_ARG(fabsl);
-CMATH_FUNC_1_ARG(floorl);
-CMATH_FUNC_1_ARG(logl);
-CMATH_FUNC_1_ARG(log10l);
-CMATH_FUNC_1_ARG(sinl);
-CMATH_FUNC_1_ARG(sinhl);
-CMATH_FUNC_1_ARG(sqrtl);
-CMATH_FUNC_1_ARG(tanl);
-CMATH_FUNC_1_ARG(tanhl);
 CMATH_FUNC_1_ARG(acosh);
 CMATH_FUNC_1_ARG(asinh);
 CMATH_FUNC_1_ARG(atanh);
@@ -74,59 +39,11 @@ CMATH_FUNC_1_ARG(lgamma);
 CMATH_FUNC_1_ARG(log1p);
 CMATH_FUNC_1_ARG(log2);
 CMATH_FUNC_1_ARG(logb);
-CMATH_FUNC_1_ARG(llrint);
-CMATH_FUNC_1_ARG(lrint);
 CMATH_FUNC_1_ARG(nearbyint);
 CMATH_FUNC_1_ARG(rint);
-CMATH_FUNC_1_ARG(llround);
-CMATH_FUNC_1_ARG(lround);
 CMATH_FUNC_1_ARG(round);
 CMATH_FUNC_1_ARG(trunc);
 CMATH_FUNC_1_ARG(tgamma);
-CMATH_FUNC_1_ARG(acoshf);
-CMATH_FUNC_1_ARG(asinhf);
-CMATH_FUNC_1_ARG(atanhf);
-CMATH_FUNC_1_ARG(cbrtf);
-CMATH_FUNC_1_ARG(erff);
-CMATH_FUNC_1_ARG(erfcf);
-CMATH_FUNC_1_ARG(expm1f);
-CMATH_FUNC_1_ARG(exp2f);
-CMATH_FUNC_1_ARG(ilogbf);
-CMATH_FUNC_1_ARG(lgammaf);
-CMATH_FUNC_1_ARG(log1pf);
-CMATH_FUNC_1_ARG(log2f);
-CMATH_FUNC_1_ARG(logbf);
-CMATH_FUNC_1_ARG(llrintf);
-CMATH_FUNC_1_ARG(lrintf);
-CMATH_FUNC_1_ARG(nearbyintf);
-CMATH_FUNC_1_ARG(rintf);
-CMATH_FUNC_1_ARG(llroundf);
-CMATH_FUNC_1_ARG(lroundf);
-CMATH_FUNC_1_ARG(roundf);
-CMATH_FUNC_1_ARG(truncf);
-CMATH_FUNC_1_ARG(tgammaf);
-CMATH_FUNC_1_ARG(acoshl);
-CMATH_FUNC_1_ARG(asinhl);
-CMATH_FUNC_1_ARG(atanhl);
-CMATH_FUNC_1_ARG(cbrtl);
-CMATH_FUNC_1_ARG(erfl);
-CMATH_FUNC_1_ARG(erfcl);
-CMATH_FUNC_1_ARG(expm1l);
-CMATH_FUNC_1_ARG(exp2l);
-CMATH_FUNC_1_ARG(ilogbl);
-CMATH_FUNC_1_ARG(lgammal);
-CMATH_FUNC_1_ARG(log1pl);
-CMATH_FUNC_1_ARG(log2l);
-CMATH_FUNC_1_ARG(logbl);
-CMATH_FUNC_1_ARG(llrintl);
-CMATH_FUNC_1_ARG(lrintl);
-CMATH_FUNC_1_ARG(nearbyintl);
-CMATH_FUNC_1_ARG(rintl);
-CMATH_FUNC_1_ARG(llroundl);
-CMATH_FUNC_1_ARG(lroundl);
-CMATH_FUNC_1_ARG(roundl);
-CMATH_FUNC_1_ARG(truncl);
-CMATH_FUNC_1_ARG(tgammal);
 CMATH_FUNC_1_ARG(fpclassify);
 CMATH_FUNC_1_ARG(signbit);
 CMATH_FUNC_1_ARG(isfinite);
@@ -136,55 +53,17 @@ CMATH_FUNC_1_ARG(isnormal);
 
 CMATH_FUNC_2_ARG(atan2);
 CMATH_FUNC_2_ARG(fmod);
-CMATH_FUNC_2_ARG(ldexp);
 CMATH_FUNC_2_ARG(pow);
-CMATH_FUNC_2_ARG(atan2f);
-CMATH_FUNC_2_ARG(fmodf);
-CMATH_FUNC_2_ARG(ldexpf);
-CMATH_FUNC_2_ARG(powf);
-CMATH_FUNC_2_ARG(atan2l);
-CMATH_FUNC_2_ARG(fmodl);
-CMATH_FUNC_2_ARG(ldexpl);
-CMATH_FUNC_2_ARG(powl);
 CMATH_FUNC_2_ARG(fdim);
 CMATH_FUNC_2_ARG(fmax);
 CMATH_FUNC_2_ARG(fmin);
 CMATH_FUNC_2_ARG(remainder);
 CMATH_FUNC_2_ARG(copysign);
 CMATH_FUNC_2_ARG(nextafter);
-CMATH_FUNC_2_ARG(scalbn);
-CMATH_FUNC_2_ARG(scalbln);
 CMATH_FUNC_2_ARG(nexttoward);
-CMATH_FUNC_2_ARG(hypotf);
-CMATH_FUNC_2_ARG(fdimf);
-CMATH_FUNC_2_ARG(fmaxf);
-CMATH_FUNC_2_ARG(fminf);
-CMATH_FUNC_2_ARG(remainderf);
-CMATH_FUNC_2_ARG(copysignf);
-CMATH_FUNC_2_ARG(nextafterf);
-CMATH_FUNC_2_ARG(scalbnf);
-CMATH_FUNC_2_ARG(scalblnf);
-CMATH_FUNC_2_ARG(nexttowardf);
-CMATH_FUNC_2_ARG(hypotl);
-CMATH_FUNC_2_ARG(fdiml);
-CMATH_FUNC_2_ARG(fmaxl);
-CMATH_FUNC_2_ARG(fminl);
-CMATH_FUNC_2_ARG(remainderl);
-CMATH_FUNC_2_ARG(copysignl);
-CMATH_FUNC_2_ARG(nextafterl);
-CMATH_FUNC_2_ARG(scalbnl);
-CMATH_FUNC_2_ARG(scalblnl);
-CMATH_FUNC_2_ARG(nexttowardl);
-CMATH_FUNC_2_ARG(isgreater);
-CMATH_FUNC_2_ARG(isgreaterequal);
-CMATH_FUNC_2_ARG(isless);
-CMATH_FUNC_2_ARG(islessequal);
-CMATH_FUNC_2_ARG(islessgreater);
-CMATH_FUNC_2_ARG(isunordered);
 
 MathI::MathI() {
 	builtin_functions.reserve(100);
-
 	builtin_functions.push_back({ "abs", CMATH_GET_FUNC_NAME(abs), 1 });
 	builtin_functions.push_back({ "acos", CMATH_GET_FUNC_NAME(acos), 1 });
 	builtin_functions.push_back({ "asin", CMATH_GET_FUNC_NAME(asin), 1 });
@@ -220,7 +99,6 @@ MathI::MathI() {
 	builtin_functions.push_back({ "round", CMATH_GET_FUNC_NAME(round), 1 });
 	builtin_functions.push_back({ "trunc", CMATH_GET_FUNC_NAME(trunc), 1 });
 	builtin_functions.push_back({ "tgamma", CMATH_GET_FUNC_NAME(tgamma), 1 });
-	builtin_functions.push_back({ "acoshf", CMATH_GET_FUNC_NAME(acoshf), 1 });
 	builtin_functions.push_back({ "fpclassify", CMATH_GET_FUNC_NAME(fpclassify), 1 });
 	builtin_functions.push_back({ "signbit", CMATH_GET_FUNC_NAME(signbit), 1 });
 	builtin_functions.push_back({ "isfinite", CMATH_GET_FUNC_NAME(isfinite), 1 });
@@ -230,20 +108,20 @@ MathI::MathI() {
 
 	builtin_functions.push_back({ "atan2", CMATH_GET_FUNC_NAME(atan2), 2 });
 	builtin_functions.push_back({ "fmod", CMATH_GET_FUNC_NAME(fmod), 2 });
-	builtin_functions.push_back({ "ldexp", CMATH_GET_FUNC_NAME(ldexp), 2 });
 	builtin_functions.push_back({ "pow", CMATH_GET_FUNC_NAME(pow), 2 });
-	builtin_functions.push_back({ "atan2f", CMATH_GET_FUNC_NAME(atan2f), 2 });
 	builtin_functions.push_back({ "fdim", CMATH_GET_FUNC_NAME(fdim), 2 });
-	builtin_functions.push_back({ "fmax", CMATH_GET_FUNC_NAME(fmax), 2 });
-	builtin_functions.push_back({ "fmin", CMATH_GET_FUNC_NAME(fmin), 2 });
+	builtin_functions.push_back({ "max", CMATH_GET_FUNC_NAME(fmax), 2 });
+	builtin_functions.push_back({ "min", CMATH_GET_FUNC_NAME(fmin), 2 });
 	builtin_functions.push_back({ "remainder", CMATH_GET_FUNC_NAME(remainder), 2 });
 	builtin_functions.push_back({ "copysign", CMATH_GET_FUNC_NAME(copysign), 2 });
 	builtin_functions.push_back({ "nextafter", CMATH_GET_FUNC_NAME(nextafter), 2 });
-	builtin_functions.push_back({ "scalbn", CMATH_GET_FUNC_NAME(scalbn), 2 });
-	builtin_functions.push_back({ "scalbln", CMATH_GET_FUNC_NAME(scalbln), 2 });
 	builtin_functions.push_back({ "nexttoward", CMATH_GET_FUNC_NAME(nexttoward), 2 });
 
-	__debugbreak();
+	constexpr double PI = 3.14159265358979323846;
+	constexpr double E = 2.71828182845904523536;
+
+	const_table.push_back({ "pi", true, PI });
+	const_table.push_back({ "e", true, E });
 }
 
 std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str) {
@@ -571,9 +449,10 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 		opcode.push_back((Opcode)f_val);
 	}
 	else if (tok.type == expr_var) {
+		bool added = false;
+
 		if (!func.arg_name.empty()) {
 			std::string& name = tok.value;
-			bool added = false;
 
 			for (size_t i = 0; i < func.arg_name.size(); ++i) {
 				if (name == func.arg_name.at(i)) {
@@ -584,13 +463,24 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 					break;
 				}
 			}
-
-			if (!added) {
-				opcode.push_back(Opcode::push);
-				opcode.push_back((Opcode)get_symbol_id(tok.value));
-			}
 		}
 		else {
+			for (Object& math_const : const_table) {
+				if (tok.value == math_const.name) {
+					opcode.push_back(Opcode::push_const);
+
+					double val = math_const.value;
+					size_t f_val;
+					std::memcpy(&f_val, &val, sizeof(val));
+
+					opcode.push_back((Opcode)f_val);
+
+					added = true;
+				}
+			}
+		}
+
+		if (!added) {
 			opcode.push_back(Opcode::push);
 			opcode.push_back((Opcode)get_symbol_id(tok.value));
 		}
@@ -633,7 +523,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 			
 			if (tok.value == b_func.name) {
 				if (params.size() != b_func.p_count) {
-					printf("mathi: code gen error: the function '%s' takes %llu arguments\n", 
+					printf("mathi: code gen error: the function '%s' takes %d arguments\n", 
 						tok.value.c_str(), b_func.p_count);
 				}
 
@@ -824,6 +714,7 @@ void MathI::gen_executable() {
 }
 
 double MathI::execute(std::vector<Opcode>& _Opcode) {
+	BuiltinFunction* builtin_funcs = builtin_functions.data();
 	Function* funcs = functions.data();
 	Object* objects = symbol_table.data();
 	Opcode* instructions = _Opcode.data();
@@ -953,7 +844,7 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 		}
 		case Opcode::call_builtin: {
 			size_t func_addr = (size_t)inst1;
-			BuiltinFunction& func = builtin_functions[func_addr];
+			BuiltinFunction& func = builtin_funcs[func_addr];
 
 			if (func.p_count == 1) {
 				double val0 = stack[stack_counter - 1];
@@ -961,8 +852,6 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 				b1func b_func = (b1func)func.ref;
 
 				stack[stack_counter - 1] = b_func(val0);
-
-				// __debugbreak();
 
 			}
 			else if (func.p_count == 2) {
@@ -972,8 +861,6 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 				b2func b_func = (b2func)func.ref;
 
 				stack[stack_counter - 1] = b_func(val0, val1);
-
-				// __debugbreak();
 			}
 
 			i += 1;
@@ -1026,9 +913,7 @@ double MathI::eval(const std::string& _Str) {
 
 		std::vector<Token> token_array{ tokens.m_Tokens };
 
-		is_condition_stack.push(false);
 		bool current_expr = rule(token_array);
-		is_condition_stack.pop();
 
 		if (!current_expr) {
 			print_syntax_error(sub_str, syntax_error_info);
@@ -1045,3 +930,7 @@ double MathI::eval(const std::string& _Str) {
 
 	return result;
 };
+
+#undef CMATH_FUNC_1_ARG
+#undef CMATH_FUNC_2_ARG
+#undef CMATH_GET_FUNC_NAME

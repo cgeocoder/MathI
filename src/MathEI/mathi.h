@@ -41,6 +41,7 @@ private:
 		unsigned int p_count;
 	};
 
+	std::vector<Object> const_table;
 	std::vector<Object> symbol_table;
 	std::vector<Opcode> opcode;
 	std::vector<Function> functions;
