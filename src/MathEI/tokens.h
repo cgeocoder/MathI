@@ -111,8 +111,11 @@ enum class Opcode : size_t {
 	uo_neg,
 	uo_not,
 
-	// call [address] [count of passed parameters]
+	// call [address]
 	call,
+
+	// call_builtin [address]
+	call_builtin,
 
 	// store [address]
 	// store a value in a program stack

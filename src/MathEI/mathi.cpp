@@ -3,9 +3,247 @@
 #include <map>
 #include <cmath>
 
-MathI::MathI() {
+typedef double (*b1func)(double);
+typedef double (*b2func)(double, double);
 
-	// builtin_functions.push_back({ "abs", std::fabs<long double>, 1 });
+
+#define CMATH_FUNC_1_ARG(name) double cmath_ ## name ## (double x) { return (double)std::name(x); }
+#define CMATH_FUNC_2_ARG(name) double cmath_ ## name ## (double x, double y) { return (double)std::name(x, y); }
+
+#define CMATH_GET_FUNC_NAME(name) cmath_ ## name
+
+CMATH_FUNC_1_ARG(abs);
+CMATH_FUNC_1_ARG(acos);
+CMATH_FUNC_1_ARG(asin);
+CMATH_FUNC_1_ARG(atan);
+CMATH_FUNC_1_ARG(ceil);
+CMATH_FUNC_1_ARG(cos);
+CMATH_FUNC_1_ARG(cosh);
+CMATH_FUNC_1_ARG(exp);
+CMATH_FUNC_1_ARG(fabs);
+CMATH_FUNC_1_ARG(floor);
+CMATH_FUNC_1_ARG(log);
+CMATH_FUNC_1_ARG(log10);
+CMATH_FUNC_1_ARG(sin);
+CMATH_FUNC_1_ARG(sinh);
+CMATH_FUNC_1_ARG(sqrt);
+CMATH_FUNC_1_ARG(tan);
+CMATH_FUNC_1_ARG(tanh);
+CMATH_FUNC_1_ARG(acosf);
+CMATH_FUNC_1_ARG(asinf);
+CMATH_FUNC_1_ARG(atanf);
+CMATH_FUNC_1_ARG(ceilf);
+CMATH_FUNC_1_ARG(cosf);
+CMATH_FUNC_1_ARG(coshf);
+CMATH_FUNC_1_ARG(expf);
+CMATH_FUNC_1_ARG(fabsf);
+CMATH_FUNC_1_ARG(floorf);
+CMATH_FUNC_1_ARG(logf);
+CMATH_FUNC_1_ARG(log10f);
+CMATH_FUNC_1_ARG(sinf);
+CMATH_FUNC_1_ARG(sinhf);
+CMATH_FUNC_1_ARG(sqrtf);
+CMATH_FUNC_1_ARG(tanf);
+CMATH_FUNC_1_ARG(tanhf);
+CMATH_FUNC_1_ARG(acosl);
+CMATH_FUNC_1_ARG(asinl);
+CMATH_FUNC_1_ARG(atanl);
+CMATH_FUNC_1_ARG(ceill);
+CMATH_FUNC_1_ARG(cosl);
+CMATH_FUNC_1_ARG(coshl);
+CMATH_FUNC_1_ARG(expl);
+CMATH_FUNC_1_ARG(fabsl);
+CMATH_FUNC_1_ARG(floorl);
+CMATH_FUNC_1_ARG(logl);
+CMATH_FUNC_1_ARG(log10l);
+CMATH_FUNC_1_ARG(sinl);
+CMATH_FUNC_1_ARG(sinhl);
+CMATH_FUNC_1_ARG(sqrtl);
+CMATH_FUNC_1_ARG(tanl);
+CMATH_FUNC_1_ARG(tanhl);
+CMATH_FUNC_1_ARG(acosh);
+CMATH_FUNC_1_ARG(asinh);
+CMATH_FUNC_1_ARG(atanh);
+CMATH_FUNC_1_ARG(cbrt);
+CMATH_FUNC_1_ARG(erf);
+CMATH_FUNC_1_ARG(erfc);
+CMATH_FUNC_1_ARG(expm1);
+CMATH_FUNC_1_ARG(exp2);
+CMATH_FUNC_1_ARG(ilogb);
+CMATH_FUNC_1_ARG(lgamma);
+CMATH_FUNC_1_ARG(log1p);
+CMATH_FUNC_1_ARG(log2);
+CMATH_FUNC_1_ARG(logb);
+CMATH_FUNC_1_ARG(llrint);
+CMATH_FUNC_1_ARG(lrint);
+CMATH_FUNC_1_ARG(nearbyint);
+CMATH_FUNC_1_ARG(rint);
+CMATH_FUNC_1_ARG(llround);
+CMATH_FUNC_1_ARG(lround);
+CMATH_FUNC_1_ARG(round);
+CMATH_FUNC_1_ARG(trunc);
+CMATH_FUNC_1_ARG(tgamma);
+CMATH_FUNC_1_ARG(acoshf);
+CMATH_FUNC_1_ARG(asinhf);
+CMATH_FUNC_1_ARG(atanhf);
+CMATH_FUNC_1_ARG(cbrtf);
+CMATH_FUNC_1_ARG(erff);
+CMATH_FUNC_1_ARG(erfcf);
+CMATH_FUNC_1_ARG(expm1f);
+CMATH_FUNC_1_ARG(exp2f);
+CMATH_FUNC_1_ARG(ilogbf);
+CMATH_FUNC_1_ARG(lgammaf);
+CMATH_FUNC_1_ARG(log1pf);
+CMATH_FUNC_1_ARG(log2f);
+CMATH_FUNC_1_ARG(logbf);
+CMATH_FUNC_1_ARG(llrintf);
+CMATH_FUNC_1_ARG(lrintf);
+CMATH_FUNC_1_ARG(nearbyintf);
+CMATH_FUNC_1_ARG(rintf);
+CMATH_FUNC_1_ARG(llroundf);
+CMATH_FUNC_1_ARG(lroundf);
+CMATH_FUNC_1_ARG(roundf);
+CMATH_FUNC_1_ARG(truncf);
+CMATH_FUNC_1_ARG(tgammaf);
+CMATH_FUNC_1_ARG(acoshl);
+CMATH_FUNC_1_ARG(asinhl);
+CMATH_FUNC_1_ARG(atanhl);
+CMATH_FUNC_1_ARG(cbrtl);
+CMATH_FUNC_1_ARG(erfl);
+CMATH_FUNC_1_ARG(erfcl);
+CMATH_FUNC_1_ARG(expm1l);
+CMATH_FUNC_1_ARG(exp2l);
+CMATH_FUNC_1_ARG(ilogbl);
+CMATH_FUNC_1_ARG(lgammal);
+CMATH_FUNC_1_ARG(log1pl);
+CMATH_FUNC_1_ARG(log2l);
+CMATH_FUNC_1_ARG(logbl);
+CMATH_FUNC_1_ARG(llrintl);
+CMATH_FUNC_1_ARG(lrintl);
+CMATH_FUNC_1_ARG(nearbyintl);
+CMATH_FUNC_1_ARG(rintl);
+CMATH_FUNC_1_ARG(llroundl);
+CMATH_FUNC_1_ARG(lroundl);
+CMATH_FUNC_1_ARG(roundl);
+CMATH_FUNC_1_ARG(truncl);
+CMATH_FUNC_1_ARG(tgammal);
+CMATH_FUNC_1_ARG(fpclassify);
+CMATH_FUNC_1_ARG(signbit);
+CMATH_FUNC_1_ARG(isfinite);
+CMATH_FUNC_1_ARG(isinf);
+CMATH_FUNC_1_ARG(isnan);
+CMATH_FUNC_1_ARG(isnormal);
+
+CMATH_FUNC_2_ARG(atan2);
+CMATH_FUNC_2_ARG(fmod);
+CMATH_FUNC_2_ARG(ldexp);
+CMATH_FUNC_2_ARG(pow);
+CMATH_FUNC_2_ARG(atan2f);
+CMATH_FUNC_2_ARG(fmodf);
+CMATH_FUNC_2_ARG(ldexpf);
+CMATH_FUNC_2_ARG(powf);
+CMATH_FUNC_2_ARG(atan2l);
+CMATH_FUNC_2_ARG(fmodl);
+CMATH_FUNC_2_ARG(ldexpl);
+CMATH_FUNC_2_ARG(powl);
+CMATH_FUNC_2_ARG(fdim);
+CMATH_FUNC_2_ARG(fmax);
+CMATH_FUNC_2_ARG(fmin);
+CMATH_FUNC_2_ARG(remainder);
+CMATH_FUNC_2_ARG(copysign);
+CMATH_FUNC_2_ARG(nextafter);
+CMATH_FUNC_2_ARG(scalbn);
+CMATH_FUNC_2_ARG(scalbln);
+CMATH_FUNC_2_ARG(nexttoward);
+CMATH_FUNC_2_ARG(hypotf);
+CMATH_FUNC_2_ARG(fdimf);
+CMATH_FUNC_2_ARG(fmaxf);
+CMATH_FUNC_2_ARG(fminf);
+CMATH_FUNC_2_ARG(remainderf);
+CMATH_FUNC_2_ARG(copysignf);
+CMATH_FUNC_2_ARG(nextafterf);
+CMATH_FUNC_2_ARG(scalbnf);
+CMATH_FUNC_2_ARG(scalblnf);
+CMATH_FUNC_2_ARG(nexttowardf);
+CMATH_FUNC_2_ARG(hypotl);
+CMATH_FUNC_2_ARG(fdiml);
+CMATH_FUNC_2_ARG(fmaxl);
+CMATH_FUNC_2_ARG(fminl);
+CMATH_FUNC_2_ARG(remainderl);
+CMATH_FUNC_2_ARG(copysignl);
+CMATH_FUNC_2_ARG(nextafterl);
+CMATH_FUNC_2_ARG(scalbnl);
+CMATH_FUNC_2_ARG(scalblnl);
+CMATH_FUNC_2_ARG(nexttowardl);
+CMATH_FUNC_2_ARG(isgreater);
+CMATH_FUNC_2_ARG(isgreaterequal);
+CMATH_FUNC_2_ARG(isless);
+CMATH_FUNC_2_ARG(islessequal);
+CMATH_FUNC_2_ARG(islessgreater);
+CMATH_FUNC_2_ARG(isunordered);
+
+MathI::MathI() {
+	builtin_functions.reserve(100);
+
+	builtin_functions.push_back({ "abs", CMATH_GET_FUNC_NAME(abs), 1 });
+	builtin_functions.push_back({ "acos", CMATH_GET_FUNC_NAME(acos), 1 });
+	builtin_functions.push_back({ "asin", CMATH_GET_FUNC_NAME(asin), 1 });
+	builtin_functions.push_back({ "atan", CMATH_GET_FUNC_NAME(atan), 1 });
+	builtin_functions.push_back({ "ceil", CMATH_GET_FUNC_NAME(ceil), 1 });
+	builtin_functions.push_back({ "cos", CMATH_GET_FUNC_NAME(cos), 1 });
+	builtin_functions.push_back({ "cosh", CMATH_GET_FUNC_NAME(cosh), 1 });
+	builtin_functions.push_back({ "exp", CMATH_GET_FUNC_NAME(exp), 1 });
+	builtin_functions.push_back({ "fabs", CMATH_GET_FUNC_NAME(fabs), 1 });
+	builtin_functions.push_back({ "floor", CMATH_GET_FUNC_NAME(floor), 1 });
+	builtin_functions.push_back({ "log", CMATH_GET_FUNC_NAME(log), 1 });
+	builtin_functions.push_back({ "log10", CMATH_GET_FUNC_NAME(log10), 1 });
+	builtin_functions.push_back({ "sin", CMATH_GET_FUNC_NAME(sin), 1 });
+	builtin_functions.push_back({ "sinh", CMATH_GET_FUNC_NAME(sinh), 1 });
+	builtin_functions.push_back({ "sqrt", CMATH_GET_FUNC_NAME(sqrt), 1 });
+	builtin_functions.push_back({ "tan", CMATH_GET_FUNC_NAME(tan), 1 });
+	builtin_functions.push_back({ "tanh", CMATH_GET_FUNC_NAME(tanh), 1 });
+	builtin_functions.push_back({ "acosh", CMATH_GET_FUNC_NAME(acosh), 1 });
+	builtin_functions.push_back({ "asinh", CMATH_GET_FUNC_NAME(asinh), 1 });
+	builtin_functions.push_back({ "atanh", CMATH_GET_FUNC_NAME(atanh), 1 });
+	builtin_functions.push_back({ "cbrt", CMATH_GET_FUNC_NAME(cbrt), 1 });
+	builtin_functions.push_back({ "erf", CMATH_GET_FUNC_NAME(erf), 1 });
+	builtin_functions.push_back({ "erfc", CMATH_GET_FUNC_NAME(erfc), 1 });
+	builtin_functions.push_back({ "expm1", CMATH_GET_FUNC_NAME(expm1), 1 });
+	builtin_functions.push_back({ "exp2", CMATH_GET_FUNC_NAME(exp2), 1 });
+	builtin_functions.push_back({ "ilogb", CMATH_GET_FUNC_NAME(ilogb), 1 });
+	builtin_functions.push_back({ "lgamma", CMATH_GET_FUNC_NAME(lgamma), 1 });
+	builtin_functions.push_back({ "log1p", CMATH_GET_FUNC_NAME(log1p), 1 });
+	builtin_functions.push_back({ "log2", CMATH_GET_FUNC_NAME(log2), 1 });
+	builtin_functions.push_back({ "logb", CMATH_GET_FUNC_NAME(logb), 1 });
+	builtin_functions.push_back({ "nearbyint", CMATH_GET_FUNC_NAME(nearbyint), 1 });
+	builtin_functions.push_back({ "rint", CMATH_GET_FUNC_NAME(rint), 1 });
+	builtin_functions.push_back({ "round", CMATH_GET_FUNC_NAME(round), 1 });
+	builtin_functions.push_back({ "trunc", CMATH_GET_FUNC_NAME(trunc), 1 });
+	builtin_functions.push_back({ "tgamma", CMATH_GET_FUNC_NAME(tgamma), 1 });
+	builtin_functions.push_back({ "acoshf", CMATH_GET_FUNC_NAME(acoshf), 1 });
+	builtin_functions.push_back({ "fpclassify", CMATH_GET_FUNC_NAME(fpclassify), 1 });
+	builtin_functions.push_back({ "signbit", CMATH_GET_FUNC_NAME(signbit), 1 });
+	builtin_functions.push_back({ "isfinite", CMATH_GET_FUNC_NAME(isfinite), 1 });
+	builtin_functions.push_back({ "isinf", CMATH_GET_FUNC_NAME(isinf), 1 });
+	builtin_functions.push_back({ "isnan", CMATH_GET_FUNC_NAME(isnan), 1 });
+	builtin_functions.push_back({ "isnormal", CMATH_GET_FUNC_NAME(isnormal), 1 });
+
+	builtin_functions.push_back({ "atan2", CMATH_GET_FUNC_NAME(atan2), 2 });
+	builtin_functions.push_back({ "fmod", CMATH_GET_FUNC_NAME(fmod), 2 });
+	builtin_functions.push_back({ "ldexp", CMATH_GET_FUNC_NAME(ldexp), 2 });
+	builtin_functions.push_back({ "pow", CMATH_GET_FUNC_NAME(pow), 2 });
+	builtin_functions.push_back({ "atan2f", CMATH_GET_FUNC_NAME(atan2f), 2 });
+	builtin_functions.push_back({ "fdim", CMATH_GET_FUNC_NAME(fdim), 2 });
+	builtin_functions.push_back({ "fmax", CMATH_GET_FUNC_NAME(fmax), 2 });
+	builtin_functions.push_back({ "fmin", CMATH_GET_FUNC_NAME(fmin), 2 });
+	builtin_functions.push_back({ "remainder", CMATH_GET_FUNC_NAME(remainder), 2 });
+	builtin_functions.push_back({ "copysign", CMATH_GET_FUNC_NAME(copysign), 2 });
+	builtin_functions.push_back({ "nextafter", CMATH_GET_FUNC_NAME(nextafter), 2 });
+	builtin_functions.push_back({ "scalbn", CMATH_GET_FUNC_NAME(scalbn), 2 });
+	builtin_functions.push_back({ "scalbln", CMATH_GET_FUNC_NAME(scalbln), 2 });
+	builtin_functions.push_back({ "nexttoward", CMATH_GET_FUNC_NAME(nexttoward), 2 });
+
+	__debugbreak();
 }
 
 std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str) {
@@ -390,15 +628,43 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 			r_gen_opcode(opcode, node, func);
 		}
 
-		for (size_t i = 0; i < functions.size(); ++i) {
-			Function& func = functions.at(i);
+		for (size_t i = 0; i < builtin_functions.size(); ++i) {
+			BuiltinFunction& b_func = builtin_functions.at(i);
+			
+			if (tok.value == b_func.name) {
+				if (params.size() != b_func.p_count) {
+					printf("mathi: code gen error: the function '%s' takes %llu arguments\n", 
+						tok.value.c_str(), b_func.p_count);
+				}
 
-			if (tok.value == func.name) {
-				opcode.push_back(Opcode::call);
+				opcode.push_back(Opcode::call_builtin);
 				opcode.push_back((Opcode)i);
-				opcode.push_back((Opcode)params.size());
+
+				// __debugbreak();
 
 				added = true;
+				break;
+			}
+		}
+
+		if (!added) {
+			for (size_t i = 0; i < functions.size(); ++i) {
+				Function& func = functions.at(i);
+
+				if (tok.value == func.name) {
+					if (params.size() != func.arg_name.size()) {
+						printf("mathi: code gen error: the function '%s' takes %llu arguments\n",
+							tok.value.c_str(), func.arg_name.size());
+					}
+
+					opcode.push_back(Opcode::call);
+					opcode.push_back((Opcode)i);
+
+					// __debugbreak();
+
+					added = true;
+					break;
+				}
 			}
 		}
 
@@ -524,8 +790,8 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 		}
 
 		else if (_Opcode.at(i) == Opcode::call) {
-			printf("%d:\tcall\t%llu\t%llu\n", (int)i, _Opcode.at(i + 1), _Opcode.at(i + 2));
-			i += 2;
+			printf("%d:\tcall\t%llu\n", (int)i, _Opcode.at(i + 1));
+			i += 1;
 		}
 
 		else if (_Opcode.at(i) == Opcode::store) {
@@ -675,21 +941,42 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 		}
 		case Opcode::call: {
 			size_t func_addr = (size_t)inst1;
-			size_t p_count = (size_t)instructions[i + 2];
-
 			Function& func = funcs[func_addr];
 
-			if (func.arg_name.size() != p_count) {
-				printf("mathi: runtime error: function '%s' has a %llu arguments, you passed %llu\n", 
-					func.name.c_str(), func.arg_name.size(), p_count);
-				return -1.0;
+			size_t stack_frame = stack_counter;
+			stack[stack_frame] = execute(func.opcode);
+
+			stack_counter = stack_frame + 1;
+			i += 1;
+
+			break;
+		}
+		case Opcode::call_builtin: {
+			size_t func_addr = (size_t)inst1;
+			BuiltinFunction& func = builtin_functions[func_addr];
+
+			if (func.p_count == 1) {
+				double val0 = stack[stack_counter - 1];
+
+				b1func b_func = (b1func)func.ref;
+
+				stack[stack_counter - 1] = b_func(val0);
+
+				// __debugbreak();
+
+			}
+			else if (func.p_count == 2) {
+				double val1 = stack[--stack_counter];
+				double val0 = stack[stack_counter - 1];
+
+				b2func b_func = (b2func)func.ref;
+
+				stack[stack_counter - 1] = b_func(val0, val1);
+
+				// __debugbreak();
 			}
 
-			size_t stack_frame = stack_counter;
-
-			stack[stack_frame] = execute(func.opcode);
-			stack_counter = stack_frame + 1;
-			i += 2;
+			i += 1;
 
 			break;
 		}
