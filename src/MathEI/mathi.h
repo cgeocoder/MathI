@@ -21,7 +21,6 @@ private:
 	double stack[max_stack_length] = { 0.0 };
 	size_t stack_counter = 0;
 
-
 	struct Object {
 		std::string name;
 		float init = false;
@@ -33,12 +32,19 @@ private:
 		std::vector<std::string> arg_name;
 		double* args = nullptr;
 		std::vector<Opcode> opcode;
-		size_t addr;
+		size_t addr = -1;
+	};
+
+	struct BuiltinFunction {
+		std::string name;
+		void* ref;
+		unsigned int p_count;
 	};
 
 	std::vector<Object> symbol_table;
 	std::vector<Opcode> opcode;
 	std::vector<Function> functions;
+	std::vector<BuiltinFunction> builtin_functions;
 
 	int get_symbol_id(const std::string& _Name);
 	void generate_ast(const std::vector<Token>& _Tokens);
@@ -50,6 +56,8 @@ private:
 	double execute(std::vector<Opcode>& _Opcode);
 
 public:
+	MathI();
+
 	double eval(const std::string& _Str);
 };
 

@@ -1,6 +1,12 @@
 #include "mathi.h"
 #include "parser.h"
 #include <map>
+#include <cmath>
+
+MathI::MathI() {
+
+	// builtin_functions.push_back({ "abs", std::fabs<long double>, 1 });
+}
 
 std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str) {
 	const size_t length = _Str.length();
@@ -95,7 +101,7 @@ size_t find_func_decl_in_range_ast(const std::vector<AST*>& ast, const std::pair
 	if ((ast.at(0)->token.type == expr_var) 
 		&& (ast.at(1)->token.type == expr_par)
 		&& (ast.at(2)->token.type == bin_op_assign)
-		&& (ast.at(3)->token.type >= bin_op_pow && ast.at(3)->token.type <= expr_var))
+		&& (ast.at(3)->token.type >= bin_op_pow && ast.at(3)->token.type <= var_enum))
 			return 0;
 
 	return std::string::npos;
@@ -254,6 +260,7 @@ void MathI::generate_ast(const std::vector<Token>& _Tokens) {
 
 	while (ast.size() != 1) {
 		std::pair<size_t, size_t> parse_range = get_parse_range(ast);
+
 		generate_range_ast(ast, parse_range);
 	}
 
@@ -313,8 +320,8 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 
 		functions.push_back(func_decl);
 
-		printf("# function %llu\n", func_decl.addr);
-		debug_print_opcode(func_decl.opcode);
+		// printf("# function %llu\n", func_decl.addr);
+		// debug_print_opcode(func_decl.opcode);
 	}
 	else if (tok.type == expr_num_const) {
 		opcode.push_back(Opcode::push_const);
@@ -545,7 +552,7 @@ void MathI::gen_executable() {
 	
 	opcode.push_back(Opcode::halt);
 
-	debug_print_opcode(opcode);
+	// debug_print_opcode(opcode);
 
 	// __debugbreak();
 }
@@ -743,6 +750,7 @@ double MathI::eval(const std::string& _Str) {
 
 		generate_ast(tokens.m_Tokens);
 
+		stack_counter = 0;
 		gen_executable();
 
 		result = execute(opcode);
