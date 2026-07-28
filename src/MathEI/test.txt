@@ -1,0 +1,27 @@
+>> f(x, y, z) = x + y + z;
+
+lfs 0			// of_stack.top + 0
+lfs 1			// of_stack.top + 1
+bin_op add
+lfs 2			// of_stack.top + 2
+bin_op add
+
+>> f(1, 2, 3);				[N-th index]
+								|
+push 1			// stack: [..., 1]
+push 2			// stack: [..., 1, 2]
+push 3			// stack: [..., 1, 2, 3]
+push_offset N	// of_stack: [..., N] 
+call f
+pop_offset
+
+-----------------------------------------------
+
+>> f(a, b) = q(a) * w(b)
+
+lfs 0
+push_param_count 1
+call q
+lfs	1
+push_param_count 1
+call w

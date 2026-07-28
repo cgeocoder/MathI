@@ -65,18 +65,26 @@ enum TokenType {
 };
 
 enum class Opcode : size_t {
-	// push [id]
-	// id - index of value
+	/* 
+	* Puts the address of the MathIObject
+		at the top of the stack 
+	*
+	* Syntax: 
+		push [index: void* -> size_t -> Opcode]
+	*/
 	push,
 
-	// push [value]
 	push_const,
 
-	// push_tmp [f_addr] [index]
-	push_tmp,
+	/*
+	* Load From Stack
+	* Puts the address of the MathIObject at the top of the stack 
+		adding the offset from the top of the offset_stack
 
-	// store_tmp [f_addr] [index]
-	store_tmp,
+	*	Equals:
+			push [index + offset_stack.top]
+	*/
+	lfs,
 
 	// pop
 	pop,
@@ -101,7 +109,15 @@ enum class Opcode : size_t {
 	uo_neg,
 	uo_not,
 
-	// call [address]
+	/*
+	* Calls the function
+	* 1) puts the offset at the offset_stack
+	*	offset_stack.top = stack.ptr - param_count
+	* 
+	* 2) creates param_list
+	* 3) call function
+	* 4) clears offset_stack and stack after itself
+	*/
 	call,
 
 	// call_builtin [address]
@@ -110,6 +126,8 @@ enum class Opcode : size_t {
 	// store [address]
 	// store a value in a program stack
 	store,
+
+	make_func,
 
 	// clear program stack
 	clear_stack,

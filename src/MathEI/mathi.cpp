@@ -5,7 +5,7 @@
 typedef double (*b1func)(double);
 typedef double (*b2func)(double, double);
 
-#define CMATH_FUNC_1_ARG(name) double cmath_ ## name ## (double x) { return (double)std::name(x); }
+/*#define CMATH_FUNC_1_ARG(name) double cmath_ ## name ## (double x) { return (double)std::name(x); }
 #define CMATH_FUNC_2_ARG(name) double cmath_ ## name ## (double x, double y) { return (double)std::name(x, y); }
 #define CMATH_GET_FUNC_NAME(name) cmath_ ## name
 
@@ -60,10 +60,10 @@ CMATH_FUNC_2_ARG(fmin);
 CMATH_FUNC_2_ARG(remainder);
 CMATH_FUNC_2_ARG(copysign);
 CMATH_FUNC_2_ARG(nextafter);
-CMATH_FUNC_2_ARG(nexttoward);
+CMATH_FUNC_2_ARG(nexttoward);*/
 
 MathI::MathI() {
-	builtin_functions.reserve(100);
+	/*builtin_functions.reserve(100);
 	builtin_functions.push_back({ "abs", CMATH_GET_FUNC_NAME(abs), 1 });
 	builtin_functions.push_back({ "acos", CMATH_GET_FUNC_NAME(acos), 1 });
 	builtin_functions.push_back({ "asin", CMATH_GET_FUNC_NAME(asin), 1 });
@@ -115,13 +115,13 @@ MathI::MathI() {
 	builtin_functions.push_back({ "remainder", CMATH_GET_FUNC_NAME(remainder), 2 });
 	builtin_functions.push_back({ "copysign", CMATH_GET_FUNC_NAME(copysign), 2 });
 	builtin_functions.push_back({ "nextafter", CMATH_GET_FUNC_NAME(nextafter), 2 });
-	builtin_functions.push_back({ "nexttoward", CMATH_GET_FUNC_NAME(nexttoward), 2 });
+	builtin_functions.push_back({ "nexttoward", CMATH_GET_FUNC_NAME(nexttoward), 2 });*/
+	
+	// constexpr double PI = 3.14159265358979323846;
+	// constexpr double E = 2.71828182845904523536;
 
-	constexpr double PI = 3.14159265358979323846;
-	constexpr double E = 2.71828182845904523536;
-
-	const_table.push_back({ "pi", true, PI });
-	const_table.push_back({ "e", true, E });
+	// const_table.push_back({ "pi", true, PI });
+	// const_table.push_back({ "e", true, E });
 }
 
 std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str) {
@@ -357,14 +357,37 @@ void print_ast(AST* ast, unsigned int r = 0) {
 	}
 }
 
-int MathI::get_symbol_id(const std::string& _Name) {
-	for (size_t i = 0; i < symbol_table.size(); ++i) {
-		if (symbol_table.at(i).name == _Name)
-			return (int)i;
-	}
+size_t MathI::get_object_index(const MathIObject& _Obj) {
+	auto it = std::find_if(m_Objects.begin(), m_Objects.end(), [&_Obj](const MathIObject& obj) {
+		if (_Obj.constant && obj.constant) {
+			MathIConstant* dest = static_cast<MathIConstant*>(_Obj.val_ptr);
+			MathIConstant* test = static_cast<MathIConstant*>(obj.val_ptr);
 
-	symbol_table.push_back({ _Name });
-	return (int)symbol_table.size() - 1;
+			return dest->value == test->value;
+		}
+
+		return _Obj.name == obj.name;
+	});
+	
+	if (it == m_Objects.end()) {
+		m_Objects.push_back(_Obj);
+		return m_Objects.size() - 1;
+	}
+	else
+		return std::distance(m_Objects.begin(), it);
+}
+
+size_t MathI::get_object_index_by_name(const std::string& _Name) {
+	auto it = std::find_if(m_Objects.begin(), m_Objects.end(), [&_Name](const MathIObject& obj) {
+		return _Name == obj.name;
+	});
+	
+	if (it == m_Objects.end()) {
+		m_Objects.push_back(MathIObject::make_named_object(_Name));
+		return m_Objects.size() - 1;
+	}
+	else
+		return std::distance(m_Objects.begin(), it);
 }
 
 void MathI::generate_ast(const std::vector<Token>& _Tokens) {
@@ -380,13 +403,10 @@ void MathI::generate_ast(const std::vector<Token>& _Tokens) {
 		generate_range_ast(ast, parse_range);
 	}
 
-	// print_ast(ast.at(0));
-	// std::cout << '\n';
-
 	m_AST = ast.at(0);
 }
 
-void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& func) {
+void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vector<std::string>& params) {
 	Token& tok = ast->token;
 
 	if (tok.type == TokenType::expr_par) {
@@ -395,8 +415,6 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 	}
 
 	if (tok.type == TokenType::stmt_func_decl) {
-		// check function arguments
-
 		std::vector<std::string> args;
 		std::vector<AST*> param_enum;
 
@@ -412,6 +430,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 			for (auto& name : args) {
 				if (name == arg->token.value) {
 					printf("mathi: code gen error: function declaration has a similar parameter name\n");
+					__debugbreak();
 					return;
 				}
 			}
@@ -419,143 +438,121 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 			args.push_back(arg->token.value);
 		}
 
-		Function func_decl;
-		func_decl.name = ast->token.value;
-		func_decl.arg_name = args;
-		func_decl.args = new double[func.arg_name.size()];
-		func_decl.addr = functions.size();
+		MathiIFunction* function = new MathiIFunction;
+		function->number_of_params = args.size();
 
-		for (long long i = param_enum.size() - 1; i >= 0; --i) {
-			func_decl.opcode.push_back(Opcode::store_tmp);
-			func_decl.opcode.push_back((Opcode)func_decl.addr);
-			func_decl.opcode.push_back((Opcode)i);
-		}
+		r_gen_opcode(function->opcode, ast->nodes.at(1), args);
+		function->opcode.push_back(Opcode::halt);
 
-		r_gen_opcode(func_decl.opcode, ast->nodes.at(1), func_decl);
-		func_decl.opcode.push_back(Opcode::halt);
+		opcode.push_back(Opcode::push_const);
+		opcode.push_back((Opcode)(size_t)function);
 
-		functions.push_back(func_decl);
+		opcode.push_back(Opcode::make_func);
+		opcode.push_back((Opcode)get_object_index_by_name(tok.value));
 
-		// printf("# function %llu\n", func_decl.addr);
-		// debug_print_opcode(func_decl.opcode);
+		std::cout << "[Function at 0x" << std::hex << (size_t)function << "]\n";
+		debug_print_opcode(function->opcode);
 	}
 	else if (tok.type == expr_num_const) {
-		opcode.push_back(Opcode::push_const);
+		opcode.push_back(Opcode::push);
 
 		double val = std::stod(tok.value);
-		size_t f_val;
-		std::memcpy(&f_val, &val, sizeof(val));
 
-		opcode.push_back((Opcode)f_val);
+		opcode.push_back((Opcode)get_object_index(
+			MathIObject::make_const(val)
+		));
 	}
 	else if (tok.type == expr_var) {
 		bool added = false;
 
-		if (!func.arg_name.empty()) {
+		if (!params.empty()) {
 			std::string& name = tok.value;
 
-			for (size_t i = 0; i < func.arg_name.size(); ++i) {
-				if (name == func.arg_name.at(i)) {
-					opcode.push_back(Opcode::push_tmp);
-					opcode.push_back((Opcode)func.addr);
+			for (size_t i = 0; i < params.size(); ++i) {
+				if (name == params.at(i)) {
+					opcode.push_back(Opcode::lfs);
 					opcode.push_back((Opcode)i);
 					added = true;
 					break;
-				}
-			}
-		}
-		else {
-			for (Object& math_const : const_table) {
-				if (tok.value == math_const.name) {
-					opcode.push_back(Opcode::push_const);
-
-					double val = math_const.value;
-					size_t f_val;
-					std::memcpy(&f_val, &val, sizeof(val));
-
-					opcode.push_back((Opcode)f_val);
-
-					added = true;
 				}
 			}
 		}
 
 		if (!added) {
 			opcode.push_back(Opcode::push);
-			opcode.push_back((Opcode)get_symbol_id(tok.value));
+			opcode.push_back((Opcode)get_object_index_by_name(tok.value));
 		}
 	}
 	else if (tok.type == bin_op_assign) {
-		r_gen_opcode(opcode, ast->nodes[1], func);
+		r_gen_opcode(opcode, ast->nodes[1]);
 
 		opcode.push_back(Opcode::store);
 
 		Token& dest_tok = ast->nodes[0]->token;
-		opcode.push_back((Opcode)get_symbol_id(dest_tok.value));
+		opcode.push_back((Opcode)get_object_index_by_name(dest_tok.value));
 	}
 	else if (tok.type >= bin_op_pow && tok.type <= bool_bin_op_or) {
-		r_gen_opcode(opcode, ast->nodes[0], func);
-		r_gen_opcode(opcode, ast->nodes[1], func);
+		r_gen_opcode(opcode, ast->nodes[0], params);
+		r_gen_opcode(opcode, ast->nodes[1], params);
 
 		opcode.push_back(Opcode::bin_op);
 		opcode.push_back((Opcode)tok.type);
 	}
 	else if (tok.type >= bool_un_op_not && tok.type <= un_op_sub) {
-		r_gen_opcode(opcode, ast->nodes[0], func);
+		r_gen_opcode(opcode, ast->nodes[0], params);
 
 		opcode.push_back(Opcode::un_op);
 		opcode.push_back((Opcode)tok.type);
 	}
 	else if (tok.type == expr_func_call) {
-		std::vector<AST*>& params = ast->nodes[0]->nodes; // [0] ->nodes;
+		/*
+								[expr_func_call AST node]
+				expr_func_call					
+					   |						
+					  (,)					expr_func_call
+					  / \			OR		       |
+					 /   \						  expr
+				   expr  (,)
+				         / \
+						/   \
+					  expr  ...
+		*/
+
+		std::vector<AST*>& call_params = ast->nodes[0]->nodes; // [0] ->nodes;
 		bool added = false;
 
-		if (params.at(0)->token.type == expr_enum) {
-			params = params[0]->nodes;
+		if (call_params.at(0)->token.type == expr_enum) {
+			call_params = call_params[0]->nodes;
 		}
 
-		for (auto& node : params) {
-			r_gen_opcode(opcode, node, func);
+		for (auto& node : call_params) {
+			r_gen_opcode(opcode, node, params);
 		}
 
-		for (size_t i = 0; i < builtin_functions.size(); ++i) {
-			BuiltinFunction& b_func = builtin_functions.at(i);
-			
-			if (tok.value == b_func.name) {
-				if (params.size() != b_func.p_count) {
-					printf("mathi: code gen error: the function '%s' takes %d arguments\n", 
-						tok.value.c_str(), b_func.p_count);
-				}
-
-				opcode.push_back(Opcode::call_builtin);
-				opcode.push_back((Opcode)i);
-
-				// __debugbreak();
-
-				added = true;
-				break;
-			}
-		}
 
 		if (!added) {
-			for (size_t i = 0; i < functions.size(); ++i) {
-				Function& func = functions.at(i);
+			if (!params.empty()) {
+				std::string& name = tok.value;
 
-				if (tok.value == func.name) {
-					if (params.size() != func.arg_name.size()) {
-						printf("mathi: code gen error: the function '%s' takes %llu arguments\n",
-							tok.value.c_str(), func.arg_name.size());
+				for (size_t i = 0; i < params.size(); ++i) {
+					if (name == params.at(i)) {
+						opcode.push_back(Opcode::lfs);
+						opcode.push_back((Opcode)i);
+						added = true; 
+						break;
 					}
-
-					opcode.push_back(Opcode::call);
-					opcode.push_back((Opcode)i);
-
-					// __debugbreak();
-
-					added = true;
-					break;
 				}
 			}
+
+			if (!added) {
+				size_t function_index = get_object_index_by_name(tok.value);
+				opcode.push_back(Opcode::push);
+				opcode.push_back((Opcode)function_index);
+				added = true;
+			}
+
+			opcode.push_back(Opcode::call);
+			opcode.push_back((Opcode)call_params.size());
 		}
 
 		if (!added) {
@@ -563,43 +560,49 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const Function& 
 			return;
 		}
 	}
-
-	// __debugbreak();
 }
 
 void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 	for (size_t i = 0; i < _Opcode.size(); ++i) {
 
 		if (_Opcode.at(i) == Opcode::push) {
-			printf("%d:\tpush\t%d\t\t(%s)\n", (int)i, (int)_Opcode.at(i + 1),
-				symbol_table.at((size_t)_Opcode.at(i + 1)).name.c_str());
+			auto& obj = m_Objects.at((size_t)_Opcode.at(i + 1));
+
+			printf("%d:\tpush\t%d\t\t(", 
+				(int)i, 
+				(int)_Opcode.at(i + 1)
+			);
+
+			if (obj.val_ptr == nullptr) {
+				printf("object '%s')\n", obj.name.c_str());
+			}
+			else if (obj.constant) {
+				printf("const %f)\n", static_cast<MathIConstant*>(obj.val_ptr)->value);
+			}
+			else if (obj.callable && obj.constant)
+				printf("builtin func");
+			else if (obj.callable)
+				printf("func '%s' at 0x%p)\n", obj.name.c_str(), obj.val_ptr);
+
+			i += 1;
+		}
+
+		else if (_Opcode.at(i) == Opcode::lfs) {
+			printf("%llu:\tlfs\t%llu+offset\n",
+				i,
+				_Opcode.at(i + 1)
+			);
 
 			i += 1;
 		}
 
 		else if (_Opcode.at(i) == Opcode::push_const) {
-			size_t f_val = (size_t)_Opcode.at(i + 1);
-			double val;
-			std::memcpy(&val, &f_val, sizeof(f_val));
+			printf("%llu:\tpush_const\t0x%p\n",
+				i,
+				(void*)(size_t)_Opcode.at(i + 1)
+			);
 
-			printf("%d:\tpush_c\t%f\n", (int)i, val);
 			i += 1;
-		}
-
-		else if (_Opcode.at(i) == Opcode::push_tmp) {
-			size_t func_addr = (size_t)_Opcode.at(i + 1);
-			size_t index = (size_t)_Opcode.at(i + 2);
-
-			printf("%d:\tpush_tmp\t%llu\t%llu\n", (int)i, func_addr, index);
-			i += 2;
-		}
-
-		else if (_Opcode.at(i) == Opcode::store_tmp) {
-			size_t func_addr = (size_t)_Opcode.at(i + 1);
-			size_t index = (size_t)_Opcode.at(i + 2);
-
-			printf("%d:\tstore_tmp\t%llu\t%llu\n", (int)i, func_addr, index);
-			i += 2;
 		}
 
 		else if (_Opcode.at(i) == Opcode::pop) {
@@ -680,13 +683,42 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 		}
 
 		else if (_Opcode.at(i) == Opcode::call) {
-			printf("%d:\tcall\t%llu\n", (int)i, _Opcode.at(i + 1));
+
+			printf("%d:\tcall\t%llu\n", 
+				(int)i, 
+				_Opcode.at(i + 1)
+			);
+			i += 1;
+		}
+
+		else if (_Opcode.at(i) == Opcode::make_func) {
+			printf("%llu:\tmake_func\t%llu\n",
+				i,
+				(size_t)_Opcode.at(i + 1)
+			);
+
 			i += 1;
 		}
 
 		else if (_Opcode.at(i) == Opcode::store) {
-			printf("%d:\tstore\t%d\t\t(%s)\n", (int)i, (int)_Opcode.at(i + 1),
-				symbol_table.at((size_t)_Opcode.at(i + 1)).name.c_str());
+			auto& obj = m_Objects.at((size_t)_Opcode.at(i + 1));
+
+			printf("%llu:\tstore\t%llu\t\t(",
+				i,
+				(size_t)_Opcode.at(i + 1)
+			);
+
+			if (obj.val_ptr == nullptr) {
+				printf("object '%s')\n", obj.name.c_str());
+			}
+			else if (obj.constant) {
+				printf("const %f)\n", static_cast<MathIConstant*>(obj.val_ptr)->value);
+			}
+			else if (obj.callable && obj.constant)
+				printf("builtin func");
+			else if (obj.callable)
+				printf("func '%s' at 0x%p)\n", obj.name.c_str(), obj.val_ptr);
+
 
 			i += 1;
 		}
@@ -707,16 +739,10 @@ void MathI::gen_executable() {
 	r_gen_opcode(opcode, m_AST);
 	
 	opcode.push_back(Opcode::halt);
-
-	// debug_print_opcode(opcode);
-
-	// __debugbreak();
 }
 
-double MathI::execute(std::vector<Opcode>& _Opcode) {
-	BuiltinFunction* builtin_funcs = builtin_functions.data();
-	Function* funcs = functions.data();
-	Object* objects = symbol_table.data();
+size_t MathI::execute(std::vector<Opcode>& _Opcode) {
+	MathIObject* objects = m_Objects.data();
 	Opcode* instructions = _Opcode.data();
 	size_t i = 0;
 
@@ -727,21 +753,14 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 		switch (inst0)
 		{
 		case Opcode::push: {
-			Object& obj = objects[(size_t)inst1];
-
-			if (!obj.init) {
-				printf("mathi: runtime error: variable '%s' is not initialized\n", obj.name.c_str());
-				return -1.0;
-			}
-
 			if (max_stack_length == stack_counter) {
 				printf("mathi: runtime error: stack overflow\n");
 				return -1.0;
 			}
 
-			stack[stack_counter] = obj.value;
+			stack[stack_counter] = (size_t)(void*)&objects[(size_t)inst1];
 			stack_counter += 1;
-			i += 1;
+			i += 1; 
 			break;
 		}
 
@@ -751,34 +770,9 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 				return -1.0;
 			}
 
-			std::memcpy(&stack[stack_counter], &inst1, sizeof(Opcode));
-
+			stack[stack_counter] = (size_t)inst1;
 			stack_counter += 1;
 			i += 1;
-			break;
-		}
-		case Opcode::push_tmp: {
-			size_t func_addr = (size_t)inst1;
-			size_t index = (size_t)instructions[i + 2];
-
-			Function& func = funcs[func_addr];
-			stack[stack_counter] = func.args[index];
-
-			stack_counter += 1;
-			i += 2;
-
-			break;
-		}
-
-		case Opcode::store_tmp: {
-			size_t func_addr = (size_t)inst1;
-			size_t index = (size_t)instructions[i + 2];
-
-			Function& func = funcs[func_addr];
-			func.args[index] = stack[--stack_counter];
-
-			i += 2;
-
 			break;
 		}
 
@@ -786,9 +780,46 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 			stack_counter -= 1;
 			break;
 		case Opcode::bin_op: {
-			double left_val = stack[stack_counter - 2];
-			double right_val = stack[stack_counter - 1];
+			MathIObject& left_obj = *(MathIObject*)stack[stack_counter - 2];
+			MathIObject& right_obj = *(MathIObject*)stack[stack_counter - 1];
 			stack_counter -= 1;
+
+			if (left_obj.callable || right_obj.callable) {
+				printf("mathi: runtime error: cannot eval bin operations with callable objects\n"); 
+				__debugbreak();
+				return -1.0;
+			}
+
+			double left_val, right_val;
+
+			if (left_obj.constant) {
+				left_val = static_cast<MathIConstant*>(left_obj.val_ptr)->value;
+			}
+			else {
+				auto left_mathi_obj = static_cast<MathIVariable*>(left_obj.val_ptr);
+
+				if (!left_mathi_obj->initialized) {
+					printf("mathi: runtime error: objects no init\n");
+					__debugbreak();
+				}
+
+				left_val = static_cast<MathIVariable*>(left_obj.val_ptr)->value;
+			}
+
+			if (right_obj.constant) {
+				right_val = static_cast<MathIConstant*>(right_obj.val_ptr)->value;
+			}
+			else {
+				auto right_mathi_obj = static_cast<MathIVariable*>(right_obj.val_ptr);
+
+				if (!right_mathi_obj->initialized) {
+					printf("mathi: runtime error: objects no init\n");
+					__debugbreak();
+				}
+
+				right_val = static_cast<MathIVariable*>(right_obj.val_ptr)->value;
+			}
+
 			double res = 0.0;
 
 			switch (inst1) {
@@ -807,79 +838,114 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 			case Opcode::bo_or:			res = (double)((bool)left_val || (bool)right_val); break;
 			}
 
-			stack[stack_counter - 1] = res;
+			MathIObject* new_obj = new MathIObject;
+			new_obj->callable = false;
+			new_obj->constant = true;
+			new_obj->val_ptr = new MathIConstant(res);
+
+			stack[stack_counter - 1] = (size_t)new_obj;
 			i += 1;
 			break;
 		}
 		case Opcode::un_op: {
-			double val = stack[stack_counter - 1];
+			MathIObject& obj = *(MathIObject*)stack[stack_counter - 1];
 			double res = 0.0;
+
+			double obj_val;
+
+			if (obj.constant) {
+				obj_val = static_cast<MathIConstant*>(obj.val_ptr)->value;
+			}
+			else {
+				auto left_mathi_obj = static_cast<MathIVariable*>(obj.val_ptr);
+
+				if (!left_mathi_obj->initialized) {
+					printf("mathi: runtime error: objects no init\n");
+					__debugbreak();
+				}
+
+				obj_val = static_cast<MathIVariable*>(obj.val_ptr)->value;
+			}
 
 			switch (inst1) {
 			case Opcode::uo_neg:
-				res = -val;
+				res = -obj_val;
 				break;
 			case Opcode::uo_not:
-				res = (double)(!((bool)val));
+				res = (double)(!((bool)obj_val));
 				break;
 			}
 
-			stack[stack_counter - 1] = res;
+			MathIObject* new_obj = new MathIObject;
+			new_obj->callable = false;
+			new_obj->constant = true;
+			new_obj->val_ptr = new MathIConstant(res);
+
+			stack[stack_counter - 1] = (size_t)new_obj;
 
 			i += 1;
 
 			break;
 		}
 		case Opcode::call: {
-			size_t func_addr = (size_t)inst1;
-			Function& func = funcs[func_addr];
+			__debugbreak();
+			size_t arg_count = (size_t)inst1;
 
-			size_t stack_frame = stack_counter;
-			stack[stack_frame] = execute(func.opcode);
+			MathIObject& target_object = *(MathIObject*)(size_t)stack[stack_counter - 1];
 
-			stack_counter = stack_frame + 1;
-			i += 1;
+			if (!target_object.callable) {
+				printf("mathi: runtime error: objects is not callable\n");
+				__debugbreak();
+			}
+			__debugbreak();
+			MathiIFunction& function = *(MathiIFunction*)target_object.val_ptr;
 
+			size_t new_offset = stack_counter - function.number_of_params - 1;
+			offset_stack[offset_stack_counter] = new_offset;
+			offset_stack_counter += 1;
+
+			stack_counter = new_offset;
+			stack[stack_counter] = execute(function.opcode);
+
+			offset_stack_counter -= 1;
+			i += 1; __debugbreak();
 			break;
 		}
-		case Opcode::call_builtin: {
-			size_t func_addr = (size_t)inst1;
-			BuiltinFunction& func = builtin_funcs[func_addr];
 
-			if (func.p_count == 1) {
-				double val0 = stack[stack_counter - 1];
+		case Opcode::lfs: {
+			__debugbreak();
+			size_t offset = offset_stack[offset_stack_counter - 1];
 
-				b1func b_func = (b1func)func.ref;
-
-				stack[stack_counter - 1] = b_func(val0);
-
-			}
-			else if (func.p_count == 2) {
-				double val1 = stack[--stack_counter];
-				double val0 = stack[stack_counter - 1];
-
-				b2func b_func = (b2func)func.ref;
-
-				stack[stack_counter - 1] = b_func(val0, val1);
-			}
-
-			i += 1;
-
+			stack[stack_counter] = stack[offset + (size_t)inst1];
+			stack_counter += 1;
+			i += 1; __debugbreak();
 			break;
 		}
+		
 		case Opcode::store: {
+			MathIObject& target = *(MathIObject*)(size_t)stack[stack_counter - 1];
+
 			size_t index = (size_t)inst1;
 
-			double val = stack[stack_counter - 1];
-			stack_counter -= 1;
+			objects[index] = target;
 
-			objects[index].init = true;
-			objects[index].value = val;
+			i += 1; 
+
+			break;
+		}
+
+		case Opcode::make_func: {
+			MathIObject& target = objects[(size_t)inst1];
+			target.callable = true;
+			target.constant = false;
+			target.val_ptr = (void*)(size_t)stack[stack_counter - 1];
+			stack_counter -= 1;
 
 			i += 1;
 
 			break;
 		}
+
 		case Opcode::clear_stack:
 			stack_counter = 0;
 			break;
@@ -893,7 +959,7 @@ double MathI::execute(std::vector<Opcode>& _Opcode) {
 	}
 
 	if (stack_counter == 0)
-		return 0.0;
+		return 0;
 
 	return stack[stack_counter - 1];
 }
@@ -919,16 +985,38 @@ double MathI::eval(const std::string& _Str) {
 			print_syntax_error(sub_str, syntax_error_info);
 			break;
 		}
+		generate_ast(tokens.m_Tokens); 
 
-		generate_ast(tokens.m_Tokens);
+		stack_counter = 0;		
 
-		stack_counter = 0;
 		gen_executable();
 
-		result = execute(opcode);
+		std::cout << "\n[Program opcode]\n";
+		debug_print_opcode(opcode);
+		// __debugbreak();
+
+		MathIObject* obj_res = (MathIObject*)execute(opcode);
+
+		std::cout << "\nResult >> ";
+		if (obj_res == nullptr)
+			std::cout << "nullptr\n";
+		else if (obj_res->callable) {
+			std::cout << "Function '" << obj_res->name << "' at 0x" << std::hex << (size_t)obj_res->val_ptr << '\n';
+		}
+		else if (obj_res->constant) {
+			std::cout << "Constant: " << ((MathIConstant*)obj_res->val_ptr)->value << '\n';
+		}
+		else {
+			auto var = (MathIVariable*)obj_res->val_ptr;
+
+			if (var->initialized)
+				std::cout << "Variable: " << obj_res->name << "=" << var->value << '\n';
+			else
+				std::cout << "Uninitialized variable: " << obj_res->name << '\n';
+		}
 	}
 
-	return result;
+	return 0;
 };
 
 #undef CMATH_FUNC_1_ARG

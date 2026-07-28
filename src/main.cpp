@@ -14,11 +14,12 @@ int main() {
 		std::getline(std::cin, str);
 
 		if (str == ".clear") {
+			__debugbreak();
 			system("cls");
 			continue;
 		}
 		
-		std::cout << std::to_string(mathi.eval(str)) << std::endl << std::endl;
+		mathi.eval(str);
 	}
 
 	return 0;
