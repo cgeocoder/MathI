@@ -4,6 +4,7 @@
 #define __MATH_EXPRESSION_INTERPRETER_H__
 
 #include <string>
+#include <format>
 #include "tokens.h"
 
 class MathIObject;
@@ -73,23 +74,36 @@ public:
 	std::vector<AST*> nodes;
 };
 
+static std::string get_mathi_object_info(MathIObject* o) {
+	if (o == nullptr)
+		return "[object is <nullptr>]";
+
+	if (o->callable)
+		return std::format("[function '{}' at 0x{:x}]", o->name, (size_t)o->val_ptr).c_str();
+
+	if (o->constant)
+		return std::format("[const '{}']", static_cast<MathIConstant*>(o->val_ptr)->value).c_str();
+
+	else {
+		auto v = static_cast<MathIVariable*>(o->val_ptr);
+
+		if (v != nullptr && v->initialized)
+			return std::format("[var {}={}]", o->name, v->value);
+		else {
+			return std::format("[var {}=???]", o->name);
+		}
+	}
+}
+
 class MathI {
 private:
 	AST* m_AST;
 	static constexpr size_t max_stack_length = 512;
-	size_t stack[max_stack_length] = { 0 };
+	MathIObject* stack[max_stack_length] = { 0 };
 	size_t stack_counter = 0;
 
 	size_t offset_stack[max_stack_length] = { 0 };
 	size_t offset_stack_counter = 0;
-
-	struct Function {
-		std::string name;
-		std::vector<std::string> arg_name;
-		double* args = nullptr;
-		std::vector<Opcode> opcode;
-		size_t addr = -1;
-	};
 
 	std::vector<Opcode> opcode;
 	std::vector<MathIObject> m_Objects;
@@ -103,10 +117,11 @@ private:
 	void gen_executable();
 
 	void debug_print_opcode(const std::vector<Opcode>& _Opcode);
-	size_t execute(std::vector<Opcode>& _Opcode);
+	MathIObject* execute(std::vector<Opcode>& _Opcode);
 
 public:
 	MathI();
+	~MathI();
 
 	double eval(const std::string& _Str);
 };

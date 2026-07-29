@@ -62,68 +62,6 @@ CMATH_FUNC_2_ARG(copysign);
 CMATH_FUNC_2_ARG(nextafter);
 CMATH_FUNC_2_ARG(nexttoward);*/
 
-MathI::MathI() {
-	/*builtin_functions.reserve(100);
-	builtin_functions.push_back({ "abs", CMATH_GET_FUNC_NAME(abs), 1 });
-	builtin_functions.push_back({ "acos", CMATH_GET_FUNC_NAME(acos), 1 });
-	builtin_functions.push_back({ "asin", CMATH_GET_FUNC_NAME(asin), 1 });
-	builtin_functions.push_back({ "atan", CMATH_GET_FUNC_NAME(atan), 1 });
-	builtin_functions.push_back({ "ceil", CMATH_GET_FUNC_NAME(ceil), 1 });
-	builtin_functions.push_back({ "cos", CMATH_GET_FUNC_NAME(cos), 1 });
-	builtin_functions.push_back({ "cosh", CMATH_GET_FUNC_NAME(cosh), 1 });
-	builtin_functions.push_back({ "exp", CMATH_GET_FUNC_NAME(exp), 1 });
-	builtin_functions.push_back({ "fabs", CMATH_GET_FUNC_NAME(fabs), 1 });
-	builtin_functions.push_back({ "floor", CMATH_GET_FUNC_NAME(floor), 1 });
-	builtin_functions.push_back({ "log", CMATH_GET_FUNC_NAME(log), 1 });
-	builtin_functions.push_back({ "log10", CMATH_GET_FUNC_NAME(log10), 1 });
-	builtin_functions.push_back({ "sin", CMATH_GET_FUNC_NAME(sin), 1 });
-	builtin_functions.push_back({ "sinh", CMATH_GET_FUNC_NAME(sinh), 1 });
-	builtin_functions.push_back({ "sqrt", CMATH_GET_FUNC_NAME(sqrt), 1 });
-	builtin_functions.push_back({ "tan", CMATH_GET_FUNC_NAME(tan), 1 });
-	builtin_functions.push_back({ "tanh", CMATH_GET_FUNC_NAME(tanh), 1 });
-	builtin_functions.push_back({ "acosh", CMATH_GET_FUNC_NAME(acosh), 1 });
-	builtin_functions.push_back({ "asinh", CMATH_GET_FUNC_NAME(asinh), 1 });
-	builtin_functions.push_back({ "atanh", CMATH_GET_FUNC_NAME(atanh), 1 });
-	builtin_functions.push_back({ "cbrt", CMATH_GET_FUNC_NAME(cbrt), 1 });
-	builtin_functions.push_back({ "erf", CMATH_GET_FUNC_NAME(erf), 1 });
-	builtin_functions.push_back({ "erfc", CMATH_GET_FUNC_NAME(erfc), 1 });
-	builtin_functions.push_back({ "expm1", CMATH_GET_FUNC_NAME(expm1), 1 });
-	builtin_functions.push_back({ "exp2", CMATH_GET_FUNC_NAME(exp2), 1 });
-	builtin_functions.push_back({ "ilogb", CMATH_GET_FUNC_NAME(ilogb), 1 });
-	builtin_functions.push_back({ "lgamma", CMATH_GET_FUNC_NAME(lgamma), 1 });
-	builtin_functions.push_back({ "log1p", CMATH_GET_FUNC_NAME(log1p), 1 });
-	builtin_functions.push_back({ "log2", CMATH_GET_FUNC_NAME(log2), 1 });
-	builtin_functions.push_back({ "logb", CMATH_GET_FUNC_NAME(logb), 1 });
-	builtin_functions.push_back({ "nearbyint", CMATH_GET_FUNC_NAME(nearbyint), 1 });
-	builtin_functions.push_back({ "rint", CMATH_GET_FUNC_NAME(rint), 1 });
-	builtin_functions.push_back({ "round", CMATH_GET_FUNC_NAME(round), 1 });
-	builtin_functions.push_back({ "trunc", CMATH_GET_FUNC_NAME(trunc), 1 });
-	builtin_functions.push_back({ "tgamma", CMATH_GET_FUNC_NAME(tgamma), 1 });
-	builtin_functions.push_back({ "fpclassify", CMATH_GET_FUNC_NAME(fpclassify), 1 });
-	builtin_functions.push_back({ "signbit", CMATH_GET_FUNC_NAME(signbit), 1 });
-	builtin_functions.push_back({ "isfinite", CMATH_GET_FUNC_NAME(isfinite), 1 });
-	builtin_functions.push_back({ "isinf", CMATH_GET_FUNC_NAME(isinf), 1 });
-	builtin_functions.push_back({ "isnan", CMATH_GET_FUNC_NAME(isnan), 1 });
-	builtin_functions.push_back({ "isnormal", CMATH_GET_FUNC_NAME(isnormal), 1 });
-
-	builtin_functions.push_back({ "atan2", CMATH_GET_FUNC_NAME(atan2), 2 });
-	builtin_functions.push_back({ "fmod", CMATH_GET_FUNC_NAME(fmod), 2 });
-	builtin_functions.push_back({ "pow", CMATH_GET_FUNC_NAME(pow), 2 });
-	builtin_functions.push_back({ "fdim", CMATH_GET_FUNC_NAME(fdim), 2 });
-	builtin_functions.push_back({ "max", CMATH_GET_FUNC_NAME(fmax), 2 });
-	builtin_functions.push_back({ "min", CMATH_GET_FUNC_NAME(fmin), 2 });
-	builtin_functions.push_back({ "remainder", CMATH_GET_FUNC_NAME(remainder), 2 });
-	builtin_functions.push_back({ "copysign", CMATH_GET_FUNC_NAME(copysign), 2 });
-	builtin_functions.push_back({ "nextafter", CMATH_GET_FUNC_NAME(nextafter), 2 });
-	builtin_functions.push_back({ "nexttoward", CMATH_GET_FUNC_NAME(nexttoward), 2 });*/
-	
-	// constexpr double PI = 3.14159265358979323846;
-	// constexpr double E = 2.71828182845904523536;
-
-	// const_table.push_back({ "pi", true, PI });
-	// const_table.push_back({ "e", true, E });
-}
-
 std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str) {
 	const size_t length = _Str.length();
 	std::vector<std::pair<size_t, size_t>> res;
@@ -579,10 +517,16 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 			else if (obj.constant) {
 				printf("const %f)\n", static_cast<MathIConstant*>(obj.val_ptr)->value);
 			}
-			else if (obj.callable && obj.constant)
-				printf("builtin func");
 			else if (obj.callable)
 				printf("func '%s' at 0x%p)\n", obj.name.c_str(), obj.val_ptr);
+			else {
+				auto v = static_cast<MathIVariable*>(obj.val_ptr);
+
+				if (v == nullptr || !v->initialized)
+					printf("var %s=???)\n", obj.name.c_str());
+				else
+					printf("var %s=%f)\n", obj.name.c_str(), static_cast<MathIVariable*>(obj.val_ptr)->value);
+			}
 
 			i += 1;
 		}
@@ -714,11 +658,16 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 			else if (obj.constant) {
 				printf("const %f)\n", static_cast<MathIConstant*>(obj.val_ptr)->value);
 			}
-			else if (obj.callable && obj.constant)
-				printf("builtin func");
 			else if (obj.callable)
 				printf("func '%s' at 0x%p)\n", obj.name.c_str(), obj.val_ptr);
+			else {
+				auto v = static_cast<MathIVariable*>(obj.val_ptr);
 
+				if (v == nullptr || !v->initialized)
+					printf("var %s=???)\n", obj.name.c_str());
+				else
+					printf("var %s=%f)\n", obj.name.c_str(), static_cast<MathIVariable*>(obj.val_ptr)->value);
+			}
 
 			i += 1;
 		}
@@ -734,6 +683,15 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 	}
 }
 
+MathI::MathI() {
+
+}
+
+MathI::~MathI() {
+	
+}
+
+
 void MathI::gen_executable() {
 	opcode.clear();
 	r_gen_opcode(opcode, m_AST);
@@ -741,7 +699,7 @@ void MathI::gen_executable() {
 	opcode.push_back(Opcode::halt);
 }
 
-size_t MathI::execute(std::vector<Opcode>& _Opcode) {
+MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 	MathIObject* objects = m_Objects.data();
 	Opcode* instructions = _Opcode.data();
 	size_t i = 0;
@@ -755,10 +713,15 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 		case Opcode::push: {
 			if (max_stack_length == stack_counter) {
 				printf("mathi: runtime error: stack overflow\n");
-				return -1.0;
+				return nullptr;
 			}
 
-			stack[stack_counter] = (size_t)(void*)&objects[(size_t)inst1];
+			MathIObject* tmp = &objects[(size_t)inst1];
+			std::string s = get_mathi_object_info(tmp);
+
+			auto r = offset_stack[offset_stack_counter - 1];
+
+			stack[stack_counter] = &objects[(size_t)inst1];
 			stack_counter += 1;
 			i += 1; 
 			break;
@@ -767,10 +730,12 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 		case Opcode::push_const: {
 			if (max_stack_length == stack_counter) {
 				printf("mathi: runtime error: stack overflow\n");
-				return -1.0;
+				return nullptr;
 			}
 
-			stack[stack_counter] = (size_t)inst1;
+			// MathIObject* tmp = (MathIObject*)inst1;
+			// __debugbreak();
+			stack[stack_counter] = (MathIObject*)inst1;
 			stack_counter += 1;
 			i += 1;
 			break;
@@ -780,14 +745,14 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 			stack_counter -= 1;
 			break;
 		case Opcode::bin_op: {
-			MathIObject& left_obj = *(MathIObject*)stack[stack_counter - 2];
-			MathIObject& right_obj = *(MathIObject*)stack[stack_counter - 1];
+			MathIObject& left_obj = *stack[stack_counter - 2];
+			MathIObject& right_obj = *stack[stack_counter - 1];
 			stack_counter -= 1;
 
 			if (left_obj.callable || right_obj.callable) {
 				printf("mathi: runtime error: cannot eval bin operations with callable objects\n"); 
 				__debugbreak();
-				return -1.0;
+				return nullptr;
 			}
 
 			double left_val, right_val;
@@ -798,7 +763,7 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 			else {
 				auto left_mathi_obj = static_cast<MathIVariable*>(left_obj.val_ptr);
 
-				if (!left_mathi_obj->initialized) {
+				if (left_mathi_obj == nullptr || !left_mathi_obj->initialized) {
 					printf("mathi: runtime error: objects no init\n");
 					__debugbreak();
 				}
@@ -812,7 +777,7 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 			else {
 				auto right_mathi_obj = static_cast<MathIVariable*>(right_obj.val_ptr);
 
-				if (!right_mathi_obj->initialized) {
+				if (right_mathi_obj == nullptr || !right_mathi_obj->initialized) {
 					printf("mathi: runtime error: objects no init\n");
 					__debugbreak();
 				}
@@ -838,17 +803,18 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 			case Opcode::bo_or:			res = (double)((bool)left_val || (bool)right_val); break;
 			}
 
-			MathIObject* new_obj = new MathIObject;
-			new_obj->callable = false;
-			new_obj->constant = true;
-			new_obj->val_ptr = new MathIConstant(res);
+			MathIConstant* new_const = new MathIConstant{ res };
+			MathIObject* new_obj = new MathIObject{
+				false, true, "", (void*)new_const
+			};
 
-			stack[stack_counter - 1] = (size_t)new_obj;
+			stack[stack_counter - 1] = new_obj;
 			i += 1;
+
 			break;
 		}
 		case Opcode::un_op: {
-			MathIObject& obj = *(MathIObject*)stack[stack_counter - 1];
+			MathIObject& obj = *stack[stack_counter - 1];
 			double res = 0.0;
 
 			double obj_val;
@@ -876,58 +842,96 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 				break;
 			}
 
-			MathIObject* new_obj = new MathIObject;
-			new_obj->callable = false;
-			new_obj->constant = true;
-			new_obj->val_ptr = new MathIConstant(res);
+			MathIConstant* new_const = new MathIConstant{ res };
+			MathIObject* new_obj = new MathIObject{
+				false, true, "", (void*)new_const
+			};
 
-			stack[stack_counter - 1] = (size_t)new_obj;
+			stack[stack_counter - 1] = new_obj;
 
 			i += 1;
 
 			break;
 		}
 		case Opcode::call: {
-			__debugbreak();
 			size_t arg_count = (size_t)inst1;
+			size_t stack_frame = stack_counter - arg_count;
 
-			MathIObject& target_object = *(MathIObject*)(size_t)stack[stack_counter - 1];
+			MathIObject& target_object = *stack[stack_counter - 1];
 
 			if (!target_object.callable) {
 				printf("mathi: runtime error: objects is not callable\n");
 				__debugbreak();
 			}
-			__debugbreak();
+
 			MathiIFunction& function = *(MathiIFunction*)target_object.val_ptr;
+
+			if (function.number_of_params != arg_count) {
+				printf("mathi: runtime error: func need only %llu args\n", function.number_of_params);
+				__debugbreak();
+			}
 
 			size_t new_offset = stack_counter - function.number_of_params - 1;
 			offset_stack[offset_stack_counter] = new_offset;
 			offset_stack_counter += 1;
+			
+			auto res = execute(function.opcode);
+			stack_counter = stack_frame;
 
-			stack_counter = new_offset;
-			stack[stack_counter] = execute(function.opcode);
-
+			stack[stack_frame - 1] = res;
 			offset_stack_counter -= 1;
-			i += 1; __debugbreak();
+			i += 1;
+
 			break;
 		}
 
 		case Opcode::lfs: {
-			__debugbreak();
 			size_t offset = offset_stack[offset_stack_counter - 1];
 
 			stack[stack_counter] = stack[offset + (size_t)inst1];
 			stack_counter += 1;
-			i += 1; __debugbreak();
+			i += 1;
 			break;
 		}
 		
 		case Opcode::store: {
-			MathIObject& target = *(MathIObject*)(size_t)stack[stack_counter - 1];
-
+			MathIObject& target = *stack[stack_counter - 1];
+			
 			size_t index = (size_t)inst1;
 
-			objects[index] = target;
+			if (target.callable) {
+				objects[index].callable = true;
+				objects[index].constant = false;
+				objects[index].val_ptr = target.val_ptr;
+			}
+			else if (target.constant) {
+				objects[index].callable = false;
+				objects[index].constant = false;
+
+				MathIConstant* target_const = (MathIConstant*)target.val_ptr;
+				MathIVariable* new_const = new MathIVariable;
+				new_const->initialized = true;
+				new_const->value = target_const->value;
+
+				objects[index].val_ptr = new_const;
+			}
+			else {
+				objects[index].callable = false;
+				objects[index].constant = false;
+
+				MathIVariable* target_const = (MathIVariable*)target.val_ptr;
+
+				if (target_const == nullptr || !target_const->initialized) {
+					printf("mathi: runtime error: objects is not init\n");
+					__debugbreak();
+				}
+
+				MathIVariable* new_var = new MathIVariable;
+				new_var->initialized = true;
+				new_var->value = target_const->value;
+
+				objects[index].val_ptr = new_var; 
+			}
 
 			i += 1; 
 
@@ -938,7 +942,7 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 			MathIObject& target = objects[(size_t)inst1];
 			target.callable = true;
 			target.constant = false;
-			target.val_ptr = (void*)(size_t)stack[stack_counter - 1];
+			target.val_ptr = (void*)stack[stack_counter - 1];
 			stack_counter -= 1;
 
 			i += 1;
@@ -958,8 +962,20 @@ size_t MathI::execute(std::vector<Opcode>& _Opcode) {
 		i += 1;
 	}
 
+	/*std::cout << "STACK: { ";
+	for (size_t i = 0; i < stack_counter; ++i) {
+		std::cout << get_mathi_object_info(stack[i]) << ' ';
+	}
+	std::cout << "<-- top }\n\n";
+
+	std::cout << "OFFSET_STACK: { ";
+	for (size_t i = 0; i < offset_stack_counter; ++i) {
+		std::cout << i << ' ';
+	}
+	std::cout << "<-- top }\n\n";*/
+
 	if (stack_counter == 0)
-		return 0;
+		return nullptr;
 
 	return stack[stack_counter - 1];
 }
@@ -997,23 +1013,7 @@ double MathI::eval(const std::string& _Str) {
 
 		MathIObject* obj_res = (MathIObject*)execute(opcode);
 
-		std::cout << "\nResult >> ";
-		if (obj_res == nullptr)
-			std::cout << "nullptr\n";
-		else if (obj_res->callable) {
-			std::cout << "Function '" << obj_res->name << "' at 0x" << std::hex << (size_t)obj_res->val_ptr << '\n';
-		}
-		else if (obj_res->constant) {
-			std::cout << "Constant: " << ((MathIConstant*)obj_res->val_ptr)->value << '\n';
-		}
-		else {
-			auto var = (MathIVariable*)obj_res->val_ptr;
-
-			if (var->initialized)
-				std::cout << "Variable: " << obj_res->name << "=" << var->value << '\n';
-			else
-				std::cout << "Uninitialized variable: " << obj_res->name << '\n';
-		}
+		std::cout << "\nResult >> " << get_mathi_object_info(obj_res) << '\n';
 	}
 
 	return 0;
