@@ -86,9 +86,6 @@ enum class Opcode : size_t {
 	*/
 	lfs,
 
-	// pop
-	pop,
-
 	bin_op,
 	bo_pow = bin_op_pow,
 	bo_mul = bin_op_mul,
@@ -128,9 +125,6 @@ enum class Opcode : size_t {
 	store,
 
 	make_func,
-
-	// clear program stack
-	clear_stack,
 
 	// stop program
 	halt,

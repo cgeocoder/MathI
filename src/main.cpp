@@ -8,8 +8,6 @@ int main() {
 
 	// ERROR: f(x) = (a = x)
 
-	// MUST TODO: CLEAR STACK AFTER FUNCTION CALL
-
 	while (1) {
 		std::string str;
 		std::cout << ">> ";

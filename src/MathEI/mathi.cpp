@@ -388,8 +388,8 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		opcode.push_back(Opcode::make_func);
 		opcode.push_back((Opcode)get_object_index_by_name(tok.value));
 
-		std::cout << "[Function at 0x" << std::hex << (size_t)function << "]\n";
-		debug_print_opcode(function->opcode);
+		// std::cout << "[Function at 0x" << std::hex << (size_t)function << "]\n";
+		// debug_print_opcode(function->opcode);
 	}
 	else if (tok.type == expr_num_const) {
 		opcode.push_back(Opcode::push);
@@ -549,10 +549,6 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 			i += 1;
 		}
 
-		else if (_Opcode.at(i) == Opcode::pop) {
-			printf("%d:\tpop\n", (int)i);
-		}
-
 		else if (_Opcode.at(i) == Opcode::bin_op) {
 			switch (_Opcode.at(i + 1))
 			{
@@ -672,10 +668,6 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 			i += 1;
 		}
 
-		else if (_Opcode.at(i) == Opcode::clear_stack) {
-			printf("%d:\tclear_stack\n", (int)i);
-		}
-
 		else if (_Opcode.at(i) == Opcode::halt) {
 			printf("%d:\thalt\n", (int)i);
 			break;
@@ -711,7 +703,7 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		switch (inst0)
 		{
 		case Opcode::push: {
-			if (max_stack_length == stack_counter) {
+			if (stack_counter >= max_stack_length) {
 				printf("mathi: runtime error: stack overflow\n");
 				return nullptr;
 			}
@@ -728,22 +720,17 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		}
 
 		case Opcode::push_const: {
-			if (max_stack_length == stack_counter) {
+			if (stack_counter >= max_stack_length) {
 				printf("mathi: runtime error: stack overflow\n");
 				return nullptr;
 			}
 
-			// MathIObject* tmp = (MathIObject*)inst1;
-			// __debugbreak();
 			stack[stack_counter] = (MathIObject*)inst1;
 			stack_counter += 1;
 			i += 1;
 			break;
 		}
 
-		case Opcode::pop:
-			stack_counter -= 1;
-			break;
 		case Opcode::bin_op: {
 			MathIObject& left_obj = *stack[stack_counter - 2];
 			MathIObject& right_obj = *stack[stack_counter - 1];
@@ -949,10 +936,6 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 
 			break;
 		}
-
-		case Opcode::clear_stack:
-			stack_counter = 0;
-			break;
 		case Opcode::halt:
 			break;
 		default:
@@ -1007,8 +990,8 @@ double MathI::eval(const std::string& _Str) {
 
 		gen_executable();
 
-		std::cout << "\n[Program opcode]\n";
-		debug_print_opcode(opcode);
+		// std::cout << "\n[Program opcode]\n";
+		// debug_print_opcode(opcode);
 		// __debugbreak();
 
 		MathIObject* obj_res = (MathIObject*)execute(opcode);
