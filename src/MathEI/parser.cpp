@@ -24,8 +24,8 @@ bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::strin
 
 		if (next_expr) {
 			throw MathISyntaxError(
-				"the expression cannot follow the expression",
 				_Src,
+				"the expression cannot follow the expression",
 				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
 			);
@@ -52,8 +52,8 @@ bool expr_un_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::str
 
 	if (!next_expr) {
 		throw MathISyntaxError(
-			"the expression is expected after the unary operator",
 			_Src,
+			"the expression is expected after the unary operator",
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset + 1).end
 		);
@@ -80,8 +80,8 @@ bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset, const std:
 
 		if (next_expr) {
 			throw MathISyntaxError(
-				"the expression cannot go after a constant",
 				_Src,
+				"the expression cannot go after a constant",
 				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
 			);
@@ -105,8 +105,8 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::st
 		if (type1 >= bin_op_pow && type1 <= bool_bin_op_or) {
 			if (type1 == bin_op_assign && type0 != expr_var) {
 				throw MathISyntaxError(
-					"the '=' operator can only go after the name or function declaration",
 					_Src,
+					"the '=' operator can only go after the name or function declaration",
 					_Tokens.at(_Offset).start,
 					_Tokens.at(_Offset + 1).end
 				);
@@ -116,8 +116,8 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::st
 
 			if (!is_elem_exist(_Tokens, _Offset + 2)) {
 				throw MathISyntaxError(
-					std::vformat("after '{}' the expression is expected", std::make_format_args(_Tokens.at(_Offset + 1).value)),
 					_Src,
+					std::vformat("after '{}' the expression is expected", std::make_format_args(_Tokens.at(_Offset + 1).value)),
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 1).end
 				);
@@ -129,8 +129,8 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::st
 
 			if (_Tokens.at(_Offset + 2).type == stmt_func_decl) {
 				throw MathISyntaxError(
-					std::vformat("after '{}' the expression is expected", std::make_format_args(_Tokens.at(_Offset + 2).value)),
 					_Src,
+					std::vformat("after '{}' the expression is expected", std::make_format_args(_Tokens.at(_Offset + 2).value)),
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
 				);
@@ -140,8 +140,8 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::st
 
 			if (!next_expr) {
 				throw MathISyntaxError(
-					"the expression is expected",
 					_Src,
+					"the expression is expected",
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
 				);
@@ -151,8 +151,8 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::st
 
 			if ((type1 == bin_op_pow) && (_Tokens.at(_Offset + 2).type == expr_un_op)) {
 				throw MathISyntaxError(
-					"'not' unary expression is expected",
 					_Src,
+					"'not' unary expression is expected",
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
 				);
@@ -180,8 +180,8 @@ bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::stri
 		if (type1 == sym_comma) {
 			if (!is_elem_exist(_Tokens, _Offset + 2)) {
 				throw MathISyntaxError(
-					"the expression is expected",
 					_Src,
+					"the expression is expected",
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 1).end
 				);
@@ -193,8 +193,8 @@ bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::stri
 
 			if (!next_expr) {
 				throw MathISyntaxError(
-					"the expression is expected",
 					_Src,
+					"the expression is expected",
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
 				);
@@ -225,8 +225,8 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::strin
 
 	if (!is_elem_exist(_Tokens, _Offset + 1)) {
 		throw MathISyntaxError(
-			"after '(' the expression is expected",
 			_Src,
+			"after '(' the expression is expected",
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset).end
 		);
@@ -244,8 +244,8 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::strin
 
 		if (!next_expr && (current_size != _Tokens.size())) {
 			throw MathISyntaxError(
-				"after '(' the expression is expected",
 				_Src,
+				"after '(' the expression is expected",
 				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
 			);
@@ -257,8 +257,8 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::strin
 
 	if (_Tokens.at(_Offset + 1).type == stmt_func_decl) {
 		throw MathISyntaxError(
-			"after '(' the expression is expected",
 			_Src,
+			"after '(' the expression is expected",
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset + 1).end
 		);
@@ -268,8 +268,8 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::strin
 
 	if (!is_elem_exist(_Tokens, _Offset + 2)) {
 		throw MathISyntaxError(
-			"after expression the ')' is expected",
 			_Src,
+			"after expression the ')' is expected",
 			_Tokens.at(_Offset + 1).start,
 			_Tokens.at(_Offset + 1).end
 		);
@@ -281,8 +281,8 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::strin
 
 	if (type2 != sym_rpar) {
 		throw MathISyntaxError(
-			"after expression the ')' is expected",
 			_Src,
+			"after expression the ')' is expected",
 			_Tokens.at(_Offset + 1).start,
 			_Tokens.at(_Offset + 2).end
 		);
@@ -309,8 +309,8 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, const std:
 
 	if (!is_elem_exist(_Tokens, _Offset + 2)) {
 		throw MathISyntaxError(
-			"after '(' the expected is expected",
 			_Src,
+			"after '(' the expected is expected",
 			_Tokens.at(_Offset + 1).start,
 			_Tokens.at(_Offset + 1).end
 		);
@@ -328,8 +328,8 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, const std:
 
 		if (!next_expr && (current_size != _Tokens.size())) {
 			throw MathISyntaxError(
-				"after '(' the expression is expected",
 				_Src,
+				"after '(' the expression is expected",
 				_Tokens.at(_Offset + 1).start,
 				_Tokens.at(_Offset + 2).end
 			);
@@ -341,8 +341,8 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, const std:
 
 	if (!is_elem_exist(_Tokens, _Offset + 3)) {
 		throw MathISyntaxError(
-			"after expression the ')' is expected",
 			_Src,
+			"after expression the ')' is expected",
 			_Tokens.at(_Offset + 2).start,
 			_Tokens.at(_Offset + 2).end
 		);
@@ -354,8 +354,8 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, const std:
 
 	if (!next_sym_rpar) {
 		throw MathISyntaxError(
-			"after expression the ')' is expected",
 			_Src,
+			"after expression the ')' is expected",
 			_Tokens.at(_Offset + 2).start,
 			_Tokens.at(_Offset + 3).end
 		);
@@ -374,8 +374,8 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, const std:
 
 		if (!next_expr || (_Tokens.at(_Offset + 5).type == stmt_func_decl)) {
 			throw MathISyntaxError(
-				"after '=' the expression is expected",
 				_Src,
+				"after '=' the expression is expected",
 				_Tokens.at(_Offset + 4).start,
 				_Tokens.at(_Offset + 5).end
 			);

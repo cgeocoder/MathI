@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "MathEI/mathi.h"
+#include "MathEI/errors.h"
 
 int main() {
 	MathI mathi;
@@ -10,7 +11,6 @@ int main() {
 	// ERROR: f(x) = (a = x)
 
 	// TODO: 
-	// * Error handling
 	// * unique_ptr
 	// * user_decl functions
 	//
@@ -26,11 +26,10 @@ int main() {
 		}
 		
 		try {
-			mathi.eval(str); __debugbreak();
+			mathi.eval(str); 
 		}
-		catch (const std::exception& ex) {
-			__debugbreak();
-			std::cout << ex.what() << '\n';
+		catch (const MathIError& err) {
+			std::cout << err.what();
 		}
 	}
 

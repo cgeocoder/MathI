@@ -311,8 +311,12 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		for (auto& arg : param_enum) {
 			for (auto& name : args) {
 				if (name == arg->token.value) {
-					printf("mathi: code gen error: function declaration has a similar parameter name\n");
-					__debugbreak();
+					throw MathICodeGenError(
+						m_CurrentSrc,
+						"function declaration has a similar parameter name",
+						arg->token.start, arg->token.end
+					);
+
 					return;
 				}
 			}
@@ -331,9 +335,6 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 
 		opcode.push_back(Opcode::make_func);
 		opcode.push_back((Opcode)get_object_index_by_name(tok.value));
-
-		// std::cout << "[Function at 0x" << std::hex << (size_t)function << "]\n";
-		// debug_print_opcode(function->opcode);
 	}
 	else if (tok.type == expr_num_const) {
 		opcode.push_back(Opcode::push);
@@ -348,7 +349,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		bool added = false;
 
 		if (!params.empty()) {
-			std::string_view& name = tok.value;
+			std::string& name = tok.value;
 
 			for (size_t i = 0; i < params.size(); ++i) {
 				if (name == params.at(i)) {
@@ -366,12 +367,12 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		}
 	}
 	else if (tok.type == bin_op_assign) {
-		r_gen_opcode(opcode, ast->nodes[1]);
+		r_gen_opcode(opcode, ast->nodes[1], params);
 
 		opcode.push_back(Opcode::store);
 
 		Token& dest_tok = ast->nodes[0]->token;
-		opcode.push_back((Opcode)get_object_index_by_name(dest_tok.value));
+		opcode.push_back((Opcode)get_object_index_by_name(dest_tok.value)); 
 	}
 	else if (tok.type >= bin_op_pow && tok.type <= bool_bin_op_or) {
 		r_gen_opcode(opcode, ast->nodes[0], params);
@@ -413,7 +414,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 
 		if (!added) {
 			if (!params.empty()) {
-				std::string_view& name = tok.value;
+				std::string& name = tok.value;
 
 				for (size_t i = 0; i < params.size(); ++i) {
 					if (name == params.at(i)) {
@@ -434,11 +435,6 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 
 			opcode.push_back(Opcode::call);
 			opcode.push_back((Opcode)call_params.size());
-		}
-
-		if (!added) {
-			printf("mathi: code gen error: function '%s' is not defined\n", tok.value.data());
-			return;
 		}
 	}
 }
@@ -618,19 +614,9 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 	}
 }
 
-MathI::MathI() {
-
-}
-
-MathI::~MathI() {
-	
-}
-
-
 void MathI::gen_executable() {
 	opcode.clear();
-	r_gen_opcode(opcode, m_AST);
-	
+	r_gen_opcode(opcode, m_AST, std::vector<std::string_view>());
 	opcode.push_back(Opcode::halt);
 }
 
@@ -647,8 +633,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		{
 		case Opcode::push: {
 			if (stack_counter >= max_stack_length) {
-				printf("mathi: runtime error: stack overflow\n");
-				return nullptr;
+				throw MathIRuntimeError(
+					m_CurrentSrc,
+					"stack overflow",
+					0, m_CurrentSrc.size() - 1
+				);
 			}
 
 			MathIObject* tmp = &objects[(size_t)inst1];
@@ -664,8 +653,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 
 		case Opcode::push_const: {
 			if (stack_counter >= max_stack_length) {
-				printf("mathi: runtime error: stack overflow\n");
-				return nullptr;
+				throw MathIRuntimeError(
+					m_CurrentSrc,
+					"stack overflow",
+					0, m_CurrentSrc.size() - 1
+				);
 			}
 
 			stack[stack_counter] = (MathIObject*)inst1;
@@ -680,9 +672,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			stack_counter -= 1;
 
 			if (left_obj.callable || right_obj.callable) {
-				printf("mathi: runtime error: cannot eval bin operations with callable objects\n"); 
-				__debugbreak();
-				return nullptr;
+				throw MathIRuntimeError(
+					m_CurrentSrc,
+					"it is not possible to perform a binary operation with the called object",
+					0, m_CurrentSrc.size() - 1
+				);
 			}
 
 			double left_val, right_val;
@@ -694,8 +688,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto left_mathi_obj = static_cast<MathIVariable*>(left_obj.val_ptr);
 
 				if (left_mathi_obj == nullptr || !left_mathi_obj->initialized) {
-					printf("mathi: runtime error: objects no init\n");
-					__debugbreak();
+					throw MathIRuntimeError(
+						m_CurrentSrc,
+						"the object has not been initialized",
+						0, m_CurrentSrc.size() - 1
+					);
 				}
 
 				left_val = static_cast<MathIVariable*>(left_obj.val_ptr)->value;
@@ -708,8 +705,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto right_mathi_obj = static_cast<MathIVariable*>(right_obj.val_ptr);
 
 				if (right_mathi_obj == nullptr || !right_mathi_obj->initialized) {
-					printf("mathi: runtime error: objects no init\n");
-					__debugbreak();
+					throw MathIRuntimeError(
+						m_CurrentSrc,
+						"the object has not been initialized",
+						0, m_CurrentSrc.size() - 1
+					);
 				}
 
 				right_val = static_cast<MathIVariable*>(right_obj.val_ptr)->value;
@@ -756,8 +756,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto left_mathi_obj = static_cast<MathIVariable*>(obj.val_ptr);
 
 				if (!left_mathi_obj->initialized) {
-					printf("mathi: runtime error: objects no init\n");
-					__debugbreak();
+					throw MathIRuntimeError(
+						m_CurrentSrc,
+						"the object has not been initialized",
+						0, m_CurrentSrc.size() - 1
+					);
 				}
 
 				obj_val = static_cast<MathIVariable*>(obj.val_ptr)->value;
@@ -790,15 +793,21 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			MathIObject& target_object = *stack[stack_counter - 1];
 
 			if (!target_object.callable) {
-				printf("mathi: runtime error: objects is not callable\n");
-				__debugbreak();
+				throw MathIRuntimeError(
+					m_CurrentSrc,
+					"the objects is not callable",
+					0, m_CurrentSrc.size() - 1
+				);
 			}
 
 			MathiIFunction& function = *(MathiIFunction*)target_object.val_ptr;
 
 			if (function.number_of_params != arg_count) {
-				printf("mathi: runtime error: func need only %llu args\n", function.number_of_params);
-				__debugbreak();
+				throw MathIRuntimeError(
+					m_CurrentSrc,
+					std::format("{} arguments are passed to the function instead of {}", arg_count, function.number_of_params),
+					0, m_CurrentSrc.size() - 1
+				);
 			}
 
 			size_t new_offset = stack_counter - function.number_of_params - 1;
@@ -852,8 +861,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				MathIVariable* target_const = (MathIVariable*)target.val_ptr;
 
 				if (target_const == nullptr || !target_const->initialized) {
-					printf("mathi: runtime error: objects is not init\n");
-					__debugbreak();
+					throw MathIRuntimeError(
+						m_CurrentSrc,
+						"the object has not been initialized",
+						0, m_CurrentSrc.size() - 1
+					);
 				}
 
 				MathIVariable* new_var = new MathIVariable;
@@ -912,38 +924,19 @@ double MathI::eval(const std::string& _Str) {
 	for (auto& range : divide_into_expr(_Str)) {
 		Tokenizer tokens;
 
-		std::string sub_str = _Str.substr(range.first, range.second - range.first);
-		try {
-			tokens.parse(sub_str);
-		}
-		catch (const MathIError& err) { __debugbreak(); throw; }
-		catch (const std::exception& ex) {
-			__debugbreak();
-		}
-
-		__debugbreak();
-
-		std::vector<Token> token_array{ tokens.m_Tokens };
-
-		try {
-			rule(token_array, sub_str);
-		}
-		catch (const MathIError& err) { throw; }
-		catch (const std::exception& ex) {
-			__debugbreak();
-		}
+		std::string tmp_src = _Str.substr(range.first, range.second - range.first);
+		m_CurrentSrc = tmp_src;
+		tokens.parse(m_CurrentSrc);
 		
-		generate_ast(tokens.m_Tokens); 
+		std::vector<Token> token_array{ tokens.m_Tokens };
+		rule(token_array, m_CurrentSrc);
 
-		stack_counter = 0;		
+		generate_ast(tokens.m_Tokens);
+		stack_counter = 0;	
 
 		gen_executable();
 
-		// std::cout << "\n[Program opcode]\n";
-		// debug_print_opcode(opcode);
-		// __debugbreak();
-
-		MathIObject* obj_res = (MathIObject*)execute(opcode);
+		MathIObject* obj_res = (MathIObject*)execute(opcode); 
 
 		std::cout << "\nResult >> " << get_mathi_object_info(obj_res) << '\n';
 	}

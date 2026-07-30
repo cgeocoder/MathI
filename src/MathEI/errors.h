@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef __MATHI_ERRORS_H__
+#define __MATHI_ERRORS_H__
+
 #include <string>
 #include <format>
 #include <iostream>
@@ -14,73 +19,69 @@
 
 class MathIError : public std::exception {
 public:
-	inline MathIError(
-		const std::string_view& _Src,
-		const std::string_view& _Desc,
-		size_t _Start,
-		size_t _End
-	)
-		: source{ _Src }, description{ _Desc }, 
-		start{ _Start }, end{ _End } {}
-
 	virtual ~MathIError() = default;
 
-protected:
-	size_t start, end;
-	std::string_view description, source;
+	const char* what() const override {
+		return err_msg.c_str();
+	}
 
-	inline std::string error_tag(const std::string_view& _Tag) const {
-		return std::format(
-			"mathi: error: {}\nmathi: {}\n{}{}\n\n",
-			_Tag, description, std::string(start + 6, ' '), std::string(end - start, '^')
+protected:
+	std::string err_msg;
+
+	inline void make_error(
+		const std::string_view& _Tag,
+		const std::string_view& _Desc,
+		const std::string_view& _Src,
+		size_t _Start,
+		size_t _End
+	) {
+		err_msg = std::format(
+			"mathi: {} error: {}\nmathi: {}\n{}{}\n\n",
+			_Tag, _Desc, _Src,
+			std::string(_Start + 7, ' '), 
+			std::string(_End - _Start + 1, '^')
 		);
 	}
 };
 
 class MathIParseError : public MathIError {
 public:
-	inline MathIParseError(const std::string_view& _Src,const std::string_view& _Desc,size_t _Start,size_t _End) noexcept
-		: MathIError(_Src, _Desc, _Start, _End) {}
+	inline MathIParseError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
+	{
+		make_error("parse", _Desc, _Src, _Start, _End);
+	}
 
 	virtual ~MathIParseError() noexcept = default;
-
-	virtual const char* what() const noexcept {
-		return error_tag("parse").c_str();
-	}
 };
 
 class MathISyntaxError : public MathIError {
 public:
 	inline MathISyntaxError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-		: MathIError(_Src, _Desc, _Start, _End) {}
+	{
+		make_error("syntax", _Desc, _Src, _Start, _End);
+	}
 		
 	virtual ~MathISyntaxError() noexcept  = default;
-
-	virtual const char* what() const noexcept {
-		return error_tag("syntax").c_str();
-	}
 };
 
 class MathICodeGenError : public MathIError {
 public:
 	inline MathICodeGenError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-		: MathIError(_Src, _Desc, _Start, _End) {}
+	{
+		make_error("code gen", _Desc, _Src, _Start, _End);
+	}
 
 	virtual ~MathICodeGenError() noexcept = default;
-
-	virtual const char* what() const noexcept {
-		return error_tag("code gen").c_str();
-	}
 };
 
 class MathIRuntimeError : public MathIError {
 public:
 	inline MathIRuntimeError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-		: MathIError(_Src, _Desc, _Start, _End) {}
+	{
+		make_error("runtime", _Desc, _Src, _Start, _End);
+	}
 
 	virtual ~MathIRuntimeError() noexcept = default;
-
-	virtual const char* what() const noexcept {
-		return error_tag("runtime").c_str();
-	}
 };
+
+#endif // !__MATHI_ERRORS_H__

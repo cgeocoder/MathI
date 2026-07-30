@@ -140,7 +140,7 @@ public:
 		: type{ _Type }, value{ _Value }, start{ _Start }, end{ _End } {}
 
 	TokenType type;
-	std::string_view value;
+	std::string value;
 	size_t start, end;
 };
 
@@ -204,7 +204,7 @@ private:
 	std::vector<Token> m_Tokens;
 
 public:
-	void parse(const std::string& _Str);
+	void parse(const std::string_view& _Str);
 };
 
 #endif // !__TOKENS_H__

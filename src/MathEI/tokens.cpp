@@ -23,7 +23,7 @@ static bool is_long_spec_symbol(char ch1, char ch2) {
 		|| (ch1 == '!' && ch2 == '=');
 }
 
-void Tokenizer::parse(const std::string& _Str) {
+void Tokenizer::parse(const std::string_view& _Str) {
     const auto start = _Str.begin();
     auto tmp_start = _Str.begin(), end = _Str.end();
 
@@ -31,7 +31,7 @@ void Tokenizer::parse(const std::string& _Str) {
         if (std::isalpha(*tmp_start)) {
             auto tmp_end = std::find_if(tmp_start, end, [](const char ch) -> bool {
                 return !(std::isalpha(ch) || std::isdigit(ch) || ch == '_');
-                });
+            });
 
             size_t sub_start = std::distance(start, tmp_start),
                 sub_end = std::distance(start, tmp_end);
@@ -51,7 +51,7 @@ void Tokenizer::parse(const std::string& _Str) {
             tmp_start = tmp_end;
         }
 
-        else if (std::isdigit(*start)) {
+        else if (std::isdigit(*tmp_start)) {
             bool is_floating = false, invalid_float = false;
             auto tmp_end = std::find_if(tmp_start, end, [&](const char ch) -> bool {
                 if (ch == '.') {
@@ -68,7 +68,6 @@ void Tokenizer::parse(const std::string& _Str) {
                 sub_end = std::distance(start, tmp_end);
 
             if (invalid_float) {
-                __debugbreak();
                 throw MathIParseError(
                     _Str, "invalid floating number",
                     sub_start, sub_end
@@ -83,7 +82,7 @@ void Tokenizer::parse(const std::string& _Str) {
 
             tmp_start = tmp_end;
         }
-        else if (is_long_spec_symbol(*tmp_start, *std::next(tmp_start))) {
+        else if (std::next(tmp_start) != end && is_long_spec_symbol(*tmp_start, *std::next(tmp_start))) {
             size_t sub_start = std::distance(start, tmp_start),
                 sub_end = std::distance(start, std::next(tmp_start, 2));
 
@@ -133,7 +132,7 @@ void Tokenizer::parse(const std::string& _Str) {
         }
         else {
             throw MathIParseError(
-                _Str, std::format("invalid symbol '{}'", *(tmp_start)),
+                _Str, std::format("invalid symbol '{}'", *tmp_start),
                 std::distance(start, tmp_start),
                 std::distance(start, std::next(tmp_start))
             );

@@ -108,21 +108,20 @@ private:
 	std::vector<Opcode> opcode;
 	std::vector<MathIObject> m_Objects;
 
+	std::string_view m_CurrentSrc;
+
 	size_t get_object_index(const MathIObject& _Obj);
 	size_t get_object_index_by_name(const std::string_view& _Name);
 
 	void generate_ast(const std::vector<Token>& _Tokens);
 
-	void r_gen_opcode(std::vector<Opcode>&, AST*, const std::vector<std::string_view>& params = std::vector<std::string_view>());
+	void r_gen_opcode(std::vector<Opcode>&, AST*, const std::vector<std::string_view>& params);
 	void gen_executable();
 
 	void debug_print_opcode(const std::vector<Opcode>& _Opcode);
 	MathIObject* execute(std::vector<Opcode>& _Opcode);
 
 public:
-	MathI();
-	~MathI();
-
 	double eval(const std::string& _Str);
 };
 
