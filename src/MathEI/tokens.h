@@ -111,9 +111,8 @@ enum class Opcode : size_t {
 	* 1) puts the offset at the offset_stack
 	*	offset_stack.top = stack.ptr - param_count
 	* 
-	* 2) creates param_list
-	* 3) call function
-	* 4) clears offset_stack and stack after itself
+	* 2) call function
+	* 3) clears offset_stack and stack after itself
 	*/
 	call,
 
@@ -130,19 +129,18 @@ enum class Opcode : size_t {
 	halt,
 };
 
-
 class Token {
 public:
 	inline Token(
 		TokenType _Type, 
-		const std::string& _Val,
+		std::string_view _Value,
 		size_t _Start,
 		size_t _End
 	)
-		: type{ _Type }, value{ _Val }, start{ _Start }, end{ _End } {}
+		: type{ _Type }, value{ _Value }, start{ _Start }, end{ _End } {}
 
 	TokenType type;
-	std::string value;
+	std::string_view value;
 	size_t start, end;
 };
 
@@ -206,9 +204,7 @@ private:
 	std::vector<Token> m_Tokens;
 
 public:
-	Tokenizer();
-
-	bool parse(const std::string& _Str);
+	void parse(const std::string& _Str);
 };
 
 #endif // !__TOKENS_H__

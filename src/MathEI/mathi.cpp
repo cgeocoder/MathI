@@ -1,66 +1,10 @@
 #include "mathi.h"
 #include "parser.h"
+#include "errors.h"
 #include <cmath>
 
 typedef double (*b1func)(double);
 typedef double (*b2func)(double, double);
-
-/*#define CMATH_FUNC_1_ARG(name) double cmath_ ## name ## (double x) { return (double)std::name(x); }
-#define CMATH_FUNC_2_ARG(name) double cmath_ ## name ## (double x, double y) { return (double)std::name(x, y); }
-#define CMATH_GET_FUNC_NAME(name) cmath_ ## name
-
-CMATH_FUNC_1_ARG(abs);
-CMATH_FUNC_1_ARG(acos);
-CMATH_FUNC_1_ARG(asin);
-CMATH_FUNC_1_ARG(atan);
-CMATH_FUNC_1_ARG(ceil);
-CMATH_FUNC_1_ARG(cos);
-CMATH_FUNC_1_ARG(cosh);
-CMATH_FUNC_1_ARG(exp);
-CMATH_FUNC_1_ARG(fabs);
-CMATH_FUNC_1_ARG(floor);
-CMATH_FUNC_1_ARG(log);
-CMATH_FUNC_1_ARG(log10);
-CMATH_FUNC_1_ARG(sin);
-CMATH_FUNC_1_ARG(sinh);
-CMATH_FUNC_1_ARG(sqrt);
-CMATH_FUNC_1_ARG(tan);
-CMATH_FUNC_1_ARG(tanh);
-CMATH_FUNC_1_ARG(acosh);
-CMATH_FUNC_1_ARG(asinh);
-CMATH_FUNC_1_ARG(atanh);
-CMATH_FUNC_1_ARG(cbrt);
-CMATH_FUNC_1_ARG(erf);
-CMATH_FUNC_1_ARG(erfc);
-CMATH_FUNC_1_ARG(expm1);
-CMATH_FUNC_1_ARG(exp2);
-CMATH_FUNC_1_ARG(ilogb);
-CMATH_FUNC_1_ARG(lgamma);
-CMATH_FUNC_1_ARG(log1p);
-CMATH_FUNC_1_ARG(log2);
-CMATH_FUNC_1_ARG(logb);
-CMATH_FUNC_1_ARG(nearbyint);
-CMATH_FUNC_1_ARG(rint);
-CMATH_FUNC_1_ARG(round);
-CMATH_FUNC_1_ARG(trunc);
-CMATH_FUNC_1_ARG(tgamma);
-CMATH_FUNC_1_ARG(fpclassify);
-CMATH_FUNC_1_ARG(signbit);
-CMATH_FUNC_1_ARG(isfinite);
-CMATH_FUNC_1_ARG(isinf);
-CMATH_FUNC_1_ARG(isnan);
-CMATH_FUNC_1_ARG(isnormal);
-
-CMATH_FUNC_2_ARG(atan2);
-CMATH_FUNC_2_ARG(fmod);
-CMATH_FUNC_2_ARG(pow);
-CMATH_FUNC_2_ARG(fdim);
-CMATH_FUNC_2_ARG(fmax);
-CMATH_FUNC_2_ARG(fmin);
-CMATH_FUNC_2_ARG(remainder);
-CMATH_FUNC_2_ARG(copysign);
-CMATH_FUNC_2_ARG(nextafter);
-CMATH_FUNC_2_ARG(nexttoward);*/
 
 std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str) {
 	const size_t length = _Str.length();
@@ -315,7 +259,7 @@ size_t MathI::get_object_index(const MathIObject& _Obj) {
 		return std::distance(m_Objects.begin(), it);
 }
 
-size_t MathI::get_object_index_by_name(const std::string& _Name) {
+size_t MathI::get_object_index_by_name(const std::string_view& _Name) {
 	auto it = std::find_if(m_Objects.begin(), m_Objects.end(), [&_Name](const MathIObject& obj) {
 		return _Name == obj.name;
 	});
@@ -343,8 +287,8 @@ void MathI::generate_ast(const std::vector<Token>& _Tokens) {
 
 	m_AST = ast.at(0);
 }
-
-void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vector<std::string>& params) {
+ 
+void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vector<std::string_view>& params) {
 	Token& tok = ast->token;
 
 	if (tok.type == TokenType::expr_par) {
@@ -353,7 +297,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 	}
 
 	if (tok.type == TokenType::stmt_func_decl) {
-		std::vector<std::string> args;
+		std::vector<std::string_view> args;
 		std::vector<AST*> param_enum;
 
 		if (ast->nodes[0]->nodes[0]->token.type == expr_enum) {
@@ -394,7 +338,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 	else if (tok.type == expr_num_const) {
 		opcode.push_back(Opcode::push);
 
-		double val = std::stod(tok.value);
+		double val = std::stod(std::string(tok.value));
 
 		opcode.push_back((Opcode)get_object_index(
 			MathIObject::make_const(val)
@@ -404,7 +348,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		bool added = false;
 
 		if (!params.empty()) {
-			std::string& name = tok.value;
+			std::string_view& name = tok.value;
 
 			for (size_t i = 0; i < params.size(); ++i) {
 				if (name == params.at(i)) {
@@ -467,10 +411,9 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 			r_gen_opcode(opcode, node, params);
 		}
 
-
 		if (!added) {
 			if (!params.empty()) {
-				std::string& name = tok.value;
+				std::string_view& name = tok.value;
 
 				for (size_t i = 0; i < params.size(); ++i) {
 					if (name == params.at(i)) {
@@ -494,7 +437,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		}
 
 		if (!added) {
-			printf("mathi: code gen error: function '%s' is not defined\n", tok.value.c_str());
+			printf("mathi: code gen error: function '%s' is not defined\n", tok.value.data());
 			return;
 		}
 	}
@@ -512,20 +455,20 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 			);
 
 			if (obj.val_ptr == nullptr) {
-				printf("object '%s')\n", obj.name.c_str());
+				printf("object '%s')\n", obj.name.data());
 			}
 			else if (obj.constant) {
 				printf("const %f)\n", static_cast<MathIConstant*>(obj.val_ptr)->value);
 			}
 			else if (obj.callable)
-				printf("func '%s' at 0x%p)\n", obj.name.c_str(), obj.val_ptr);
+				printf("func '%s' at 0x%p)\n", obj.name.data(), obj.val_ptr);
 			else {
 				auto v = static_cast<MathIVariable*>(obj.val_ptr);
 
 				if (v == nullptr || !v->initialized)
-					printf("var %s=???)\n", obj.name.c_str());
+					printf("var %s=???)\n", obj.name.data());
 				else
-					printf("var %s=%f)\n", obj.name.c_str(), static_cast<MathIVariable*>(obj.val_ptr)->value);
+					printf("var %s=%f)\n", obj.name.data(), static_cast<MathIVariable*>(obj.val_ptr)->value);
 			}
 
 			i += 1;
@@ -649,20 +592,20 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 			);
 
 			if (obj.val_ptr == nullptr) {
-				printf("object '%s')\n", obj.name.c_str());
+				printf("object '%s')\n", obj.name.data());
 			}
 			else if (obj.constant) {
 				printf("const %f)\n", static_cast<MathIConstant*>(obj.val_ptr)->value);
 			}
 			else if (obj.callable)
-				printf("func '%s' at 0x%p)\n", obj.name.c_str(), obj.val_ptr);
+				printf("func '%s' at 0x%p)\n", obj.name.data(), obj.val_ptr);
 			else {
 				auto v = static_cast<MathIVariable*>(obj.val_ptr);
 
 				if (v == nullptr || !v->initialized)
-					printf("var %s=???)\n", obj.name.c_str());
+					printf("var %s=???)\n", obj.name.data());
 				else
-					printf("var %s=%f)\n", obj.name.c_str(), static_cast<MathIVariable*>(obj.val_ptr)->value);
+					printf("var %s=%f)\n", obj.name.data(), static_cast<MathIVariable*>(obj.val_ptr)->value);
 			}
 
 			i += 1;
@@ -964,26 +907,32 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 }
 
 double MathI::eval(const std::string& _Str) {
-	global_rule_state = true;
-
 	double result = 0.0;
 
 	for (auto& range : divide_into_expr(_Str)) {
 		Tokenizer tokens;
 
 		std::string sub_str = _Str.substr(range.first, range.second - range.first);
-		if (!tokens.parse(sub_str)) {
-			break;
+		try {
+			tokens.parse(sub_str);
 		}
+		catch (const MathIError& err) { __debugbreak(); throw; }
+		catch (const std::exception& ex) {
+			__debugbreak();
+		}
+
+		__debugbreak();
 
 		std::vector<Token> token_array{ tokens.m_Tokens };
 
-		bool current_expr = rule(token_array);
-
-		if (!current_expr) {
-			print_syntax_error(sub_str, syntax_error_info);
-			break;
+		try {
+			rule(token_array, sub_str);
 		}
+		catch (const MathIError& err) { throw; }
+		catch (const std::exception& ex) {
+			__debugbreak();
+		}
+		
 		generate_ast(tokens.m_Tokens); 
 
 		stack_counter = 0;		

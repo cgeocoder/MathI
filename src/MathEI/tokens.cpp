@@ -1,136 +1,8 @@
 #include "tokens.h"
-
-bool is_expr(TokenType* t) {
-	return (*t >= expr_num_const)
-		&& (*t <= expr);
-}
-
-bool cond_after_expr(TokenType* t) {
-	return t[0] != sym_lpar;
-}
-
-bool is_bin_op(TokenType* t) {
-	return (*t >= bin_op_pow)
-		&& (*t <= bin_op_assign);
-}
-
-// Look ahead - 4
-bool is_expr_bin_op(TokenType* t) {
-	return is_expr(&t[0])
-		&& is_bin_op(&t[1])
-		&& is_expr(&t[2])
-		&& cond_after_expr(&t[3]);
-}
-
-// Look ahead - 2
-bool is_expr_par(TokenType* t) {
-	return t[0] == sym_lpar
-		&& is_expr(&t[1])
-		&& t[2] == sym_rpar;
-}
-
-// Look ahead - 1
-bool is_expr_func_call(TokenType* t) {
-	return t[0] == expr_var
-		&& t[1] == expr_par;
-}
-
-// Look ahead - 3
-bool is_expr_enum(TokenType* t) {
-	return is_expr(&t[0])
-		&& t[1] == sym_comma
-		&& (is_expr(&t[2]) || t[2] == expr_enum)
-		&& cond_after_expr(&t[3]);
-}
-
-bool is_un_op(TokenType* t) {
-	return *t == bin_op_sub;
-}
-
-// Look ahead - 2
-bool is_expr_un_op(TokenType* t) {
-	return is_un_op(&t[0])
-		&& is_expr(&t[1])
-		&& cond_after_expr(&t[2]);
-}
-
-bool cond_before_expr_un_op(TokenType* t) {
-	return t[0] != expr_num_const
-		&& t[0] != expr_var
-		&& t[0] != sym_rpar;
-}
-
-bool is_bool_bin_op(TokenType* t) {
-	return (*t >= bool_bin_op_less)
-		&& (*t <= bool_bin_op_or);
-}
-
-// Look ahead - 3
-bool is_bool_expr_bin_op(TokenType* t) {
-	return is_expr(&t[0])
-		&& is_bool_bin_op(&t[1])
-		&& is_expr(&t[2])
-		&& cond_after_expr(&t[3]);
-}
-
-// Look ahead - 5
-bool is_bool_expr_ter_op(TokenType* t) {
-	return is_expr(&t[0])
-		&& is_bool_bin_op(&t[1])
-		&& is_expr(&t[2])
-		&& is_bool_bin_op(&t[3])
-		&& is_expr(&t[4])
-		&& cond_after_expr(&t[5]);
-}
-
-// Look ahead - 2
-bool is_bool_expr_un_op(TokenType* t) {
-	return t[0] == bool_un_op_not
-		&& is_expr(&t[1])
-		&& cond_after_expr(&t[2]);
-}
-
-// Look ahead - 3
-bool is_var_enum(TokenType* t) {
-	return t[0] == expr_var
-		&& t[1] == sym_comma
-		&& (t[2] == expr_var || t[2] == var_enum)
-		&& cond_after_expr(&t[3]);
-}
-
-// Look ahead - 6
-bool is_stmt_func_decl(TokenType* t) {
-	return t[0] == expr_var
-		&& t[1] == sym_lpar
-		&& (t[2] == expr_var || t[2] == var_enum)
-		&& t[3] == sym_rpar
-		&& t[4] == bin_op_assign
-		&& is_expr(&t[5])
-		&& cond_after_expr(&t[6]);
-}
-
-bool is_stmt(TokenType* t) {
-	return t[0] == stmt_func_decl;
-}
-
-// Look ahead - 1
-bool is_final_instruction(TokenType* t) {
-	return (is_expr(&t[0]) || is_stmt(&t[0]))
-		&& t[1] == sym_semicolon;
-}
-
-static bool is_name(char ch) {
-	return (ch >= 'a') && (ch <= 'z')
-		|| (ch >= 'A') && (ch <= 'Z')
-		|| (ch == '_');
-}
-
-static bool is_number(char ch) {
-	return (ch >= '0') && (ch <= '9');
-}
+#include "errors.h"
 
 static bool is_spec_symbol(char ch) {
-	return ch == ','
+    return ch == ','
 		|| ch == ';'
 		|| ch == '('
 		|| ch == ')'
@@ -151,208 +23,120 @@ static bool is_long_spec_symbol(char ch1, char ch2) {
 		|| (ch1 == '!' && ch2 == '=');
 }
 
-Tokenizer::Tokenizer() {}
+void Tokenizer::parse(const std::string& _Str) {
+    const auto start = _Str.begin();
+    auto tmp_start = _Str.begin(), end = _Str.end();
 
-bool Tokenizer::parse(const std::string& _Str) {
-	size_t length = _Str.length();
+    while (tmp_start != end) {
+        if (std::isalpha(*tmp_start)) {
+            auto tmp_end = std::find_if(tmp_start, end, [](const char ch) -> bool {
+                return !(std::isalpha(ch) || std::isdigit(ch) || ch == '_');
+                });
 
-	for (size_t i = 0; i < length; ++i) {
-		if (_Str.at(i) == '#') {
-			return true;
-		}
-		else if (is_name(_Str.at(i))) {
-			size_t end = i;
+            size_t sub_start = std::distance(start, tmp_start),
+                sub_end = std::distance(start, tmp_end);
 
-			while ((end < length) && (is_name(_Str.at(end)) || (_Str.at(end) >= '0' && _Str.at(end) <= '9') || _Str.at(end) == '_'))
-				end += 1;
+            m_Tokens.push_back({
+                [&]() -> TokenType {
+                    std::string tok_str(tmp_start, tmp_end);
+                    if (tok_str == "and") return TokenType::bool_bin_op_and;
+                    if (tok_str == "or") return TokenType::bool_bin_op_or;
+                    if (tok_str == "not") return TokenType::bool_un_op_not;
+                    return TokenType::expr_var;
+                }(),
+                _Str.substr(sub_start, sub_end - sub_start),
+                sub_start, sub_end
+            });
 
-			std::string val = _Str.substr(i, end - i);
+            tmp_start = tmp_end;
+        }
 
-			if (val == "and") {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_and,
-					_Str.substr(i, 3), i, i + 3
-				});
-			}
-			else if (val == "or") {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_or,
-					_Str.substr(i, 2), i, i + 2
-				});
-			}
-			else if (val == "not") {
-				m_Tokens.push_back({
-					TokenType::bool_un_op_not,
-					_Str.substr(i, 3), i, i + 3
-				});
-			}
-			else {
-				m_Tokens.push_back({
-					TokenType::expr_var,
-					_Str.substr(i, end - i), i, end
-				});
-			}
+        else if (std::isdigit(*start)) {
+            bool is_floating = false, invalid_float = false;
+            auto tmp_end = std::find_if(tmp_start, end, [&](const char ch) -> bool {
+                if (ch == '.') {
+                    if (is_floating)
+                        return !(invalid_float = true);
 
-			i = end - 1;
-		}
-		else if (is_number(_Str.at(i))) {
-			size_t end = i;
-			bool dot = false;
+                    return !(is_floating = true);
+                }
 
-			while (end < length && (is_number(_Str.at(end)) || (_Str.at(end) == '.'))) {
-				if (dot && (_Str.at(end) == '.')) {
-					std::cout << "mathi: parser: invalid floating constant '" << _Str.substr(i, end) << "'\n";
-					return false;
-				}
-				else if (_Str.at(end) == '.')
-					dot = true;
+                return !std::isdigit(ch);
+            });
 
-				end += 1;
-			}
+            size_t sub_start = std::distance(start, tmp_start),
+                sub_end = std::distance(start, tmp_end);
 
-			m_Tokens.push_back({
-				TokenType::expr_num_const,
-				_Str.substr(i, end - i), i, end
-			});
+            if (invalid_float) {
+                __debugbreak();
+                throw MathIParseError(
+                    _Str, "invalid floating number",
+                    sub_start, sub_end
+                );
+            }
 
-			i = end - 1;
-		}
-		else if (_Str.at(i) == ',') {
-			m_Tokens.push_back({
-				TokenType::sym_comma,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == ';') {
-			m_Tokens.push_back({
-				TokenType::sym_semicolon,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == '(') {
-			m_Tokens.push_back({
-				TokenType::sym_lpar,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == ')') {
-			m_Tokens.push_back({
-				TokenType::sym_rpar,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == '^') {
-			m_Tokens.push_back({
-				TokenType::bin_op_pow,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == '*') {
-			m_Tokens.push_back({
-				TokenType::bin_op_mul,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == '/') {
-			m_Tokens.push_back({
-				TokenType::bin_op_div,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == '+') {
-			m_Tokens.push_back({
-				TokenType::bin_op_add,
-				_Str.substr(i, 1), i, i + 1
-			});
-		}
-		else if (_Str.at(i) == '-') {
-			if (m_Tokens.size() == 0) {
-				m_Tokens.push_back({
-					TokenType::un_op_sub,
-					_Str.substr(i, 1), i, i + 1
-				});
-			}
-			else {
-				TokenType prev_type = m_Tokens.at(m_Tokens.size() - 1).type;
+            m_Tokens.push_back({
+                TokenType::expr_num_const,
+                _Str.substr(sub_start, sub_end - sub_start),
+                sub_start, sub_end
+            });
 
-				if (prev_type != expr_num_const && prev_type != expr_var && prev_type != sym_rpar) {
-					m_Tokens.push_back({
-						TokenType::un_op_sub,
-						_Str.substr(i, 1), i, i + 1
-					});
-				}
-				else {
-					m_Tokens.push_back({
-						TokenType::bin_op_sub,
-						_Str.substr(i, 1), i, i + 1
-					});
-				}
-			}
-		}
-		else if (_Str.at(i) == '=') {
-			if (i + 1 < length && _Str.at(i + 1) == '=') {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_eq,
-					_Str.substr(i, 2), i, i + 2
-				});
+            tmp_start = tmp_end;
+        }
+        else if (is_long_spec_symbol(*tmp_start, *std::next(tmp_start))) {
+            size_t sub_start = std::distance(start, tmp_start),
+                sub_end = std::distance(start, std::next(tmp_start, 2));
 
-				i += 1;
-			}
-			else {
-				m_Tokens.push_back({
-					TokenType::bin_op_assign,
-					_Str.substr(i, 1), i, i + 1
-				});
-			}
-		}
-		else if (_Str.at(i) == '!') {
-			if (i + 1 < length && _Str.at(i + 1) == '=') {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_not_eq,
-					_Str.substr(i, 2), i, i + 2
-					});
-				i += 1;
-			}
-			else {
-				std::cout << "mathi: parser: invalid character '" << _Str.at(i) << "'\n";
-				return false;
-			}
-		}
-		else if (_Str.at(i) == '<') {
-			if (i + 1 < length && _Str.at(i + 1) == '=') {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_less_eq,
-					_Str.substr(i, 2), i, i + 2
-					});
-				i += 1;
-			}
-			else {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_less,
-					_Str.substr(i, 1), i, i + 1
-					});
-			}
-		}
-		else if (_Str.at(i) == '>') {
-			if (i + 1 < length && _Str.at(i + 1) == '=') {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_more_eq,
-					_Str.substr(i, 2), i, i + 2
-					});
-				i += 1;
-			}
-			else {
-				m_Tokens.push_back({
-					TokenType::bool_bin_op_more,
-					_Str.substr(i, 1), i, i + 1
-				});
-			}
-		}
-		else if (_Str.at(i) != ' ' && _Str.at(i) != '\t' && _Str.at(i) != '\n') {
-			std::cout << "mathi: parser: invalid character '" << _Str.at(i) << "'\n";
-			return false;
-		}
-	}
+            m_Tokens.push_back({
+                [&]() -> TokenType {
+                    char ch1 = *tmp_start, ch2 = *std::next(tmp_start);
+                    if (ch1 == '<' && ch2 == '=') return TokenType::bool_bin_op_less_eq;
+                    if (ch1 == '>' && ch2 == '=') return TokenType::bool_bin_op_more_eq;
+                    if (ch1 == '=' && ch2 == '=') return TokenType::bool_bin_op_eq;
+                    if (ch1 == '!' && ch2 == '=') return TokenType::bool_bin_op_not_eq;
+                    return TokenType::nothing;
+                }(),
+                _Str.substr(sub_start, sub_end - sub_start),
+                sub_start, sub_end
+                });
+            tmp_start += 2;
+        }
+        else if (is_spec_symbol(*tmp_start)) {
+            size_t sub_start = std::distance(start, tmp_start),
+                sub_end = std::distance(start, std::next(tmp_start, 2));
 
-	return true;
+            m_Tokens.push_back({
+                [&]() -> TokenType {
+                    switch (*tmp_start) {
+                    case ',': return TokenType::sym_comma;
+                    case ';': return TokenType::sym_semicolon;
+                    case '(': return TokenType::sym_lpar;
+                    case ')': return TokenType::sym_rpar;
+                    case '^': return TokenType::bin_op_pow;
+                    case '*': return TokenType::bin_op_mul;
+                    case '/': return TokenType::bin_op_div;
+                    case '+': return TokenType::bin_op_add;
+                    case '-': return TokenType::bin_op_sub;
+                    case '=': return TokenType::bin_op_assign;
+                    case '<': return TokenType::bool_bin_op_less;
+                    case '>': return TokenType::bool_bin_op_more;
+                    default: return TokenType::nothing;
+                    }
+                }(),
+                _Str.substr(sub_start, sub_end - sub_start),
+                sub_start, sub_end
+            });
+            ++tmp_start;
+        }
+        else if (char ch = *tmp_start; ch == ' ' or ch == '\t' or ch == '\n') {
+            ++tmp_start;
+        }
+        else {
+            throw MathIParseError(
+                _Str, std::format("invalid symbol '{}'", *(tmp_start)),
+                std::distance(start, tmp_start),
+                std::distance(start, std::next(tmp_start))
+            );
+        }
+    }
 }

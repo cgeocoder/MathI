@@ -1,35 +1,17 @@
 #include "parser.h"
+#include "errors.h"
 
-
-void set_syntax_error(const SyntaxErrorInfo& _Error) {
-	if (!global_rule_state)
-		return;
-
-	global_rule_state = false;
-	syntax_error_info = _Error;
+static bool expr_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
+	return expr_un_op_rule(_Tokens, _Offset, _Src)
+			|| expr_bin_op_rule(_Tokens, _Offset, _Src)
+			|| expr_func_decl_rule(_Tokens, _Offset, _Src)
+			|| expr_par_rule(_Tokens, _Offset, _Src)
+			|| expr_enum_rule(_Tokens, _Offset, _Src)
+			|| expr_var_rule(_Tokens, _Offset, _Src)
+			|| expr_num_const_rule(_Tokens, _Offset, _Src);
 }
 
-void print_syntax_error(const std::string& _Src, const SyntaxErrorInfo& _ErrorInfo) {
-	std::cout
-		<< "\nmath: syntax error: " << _ErrorInfo.info << '\n'
-		<< "math: " << _Src << '\n'
-		<< std::string(_ErrorInfo.start + 6, ' ')
-		<< std::string(_ErrorInfo.end - _ErrorInfo.start, '^')
-		<< "\n\n";
-}
-
-static bool expr_rule(std::vector<Token>& _Tokens, size_t _Offset) {
-	return global_rule_state &&
-		(expr_un_op_rule(_Tokens, _Offset)
-			|| expr_bin_op_rule(_Tokens, _Offset)
-			|| expr_func_decl_rule(_Tokens, _Offset)
-			|| expr_par_rule(_Tokens, _Offset)
-			|| expr_enum_rule(_Tokens, _Offset)
-			|| expr_var_rule(_Tokens, _Offset)
-			|| expr_num_const_rule(_Tokens, _Offset));
-}
-
-bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	bool current_var = _Tokens.at(_Offset).type == expr_var;
 
 	if (!current_var)
@@ -41,11 +23,12 @@ bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 		bool next_expr = (next_type >= expr_num_const && next_type <= var_enum);
 
 		if (next_expr) {
-			set_syntax_error({
+			throw MathISyntaxError(
 				"the expression cannot follow the expression",
+				_Src,
 				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
-				});
+			);
 
 			return false;
 		}
@@ -54,7 +37,7 @@ bool expr_var_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return true;
 }
 
-bool expr_un_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_un_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	if (!is_elem_exist(_Tokens, _Offset + 1))
 		return false;
 
@@ -65,14 +48,15 @@ bool expr_un_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	if (!current_sign)
 		return false;
 
-	bool next_expr = expr_rule(_Tokens, _Offset + 1);
+	bool next_expr = expr_rule(_Tokens, _Offset + 1, _Src);
 
 	if (!next_expr) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"the expression is expected after the unary operator",
+			_Src,
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset + 1).end
-		});
+		);
 
 		return false;
 	}
@@ -83,7 +67,7 @@ bool expr_un_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return true;
 }
 
-bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	bool current_num = _Tokens.at(_Offset).type == expr_num_const;
 
 	if (!current_num)
@@ -95,11 +79,12 @@ bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 		bool next_expr = (next_type >= expr_num_const && next_type <= var_enum) || next_type == sym_lpar;
 
 		if (next_expr) {
-			set_syntax_error({
-				"an expression cannot go after a constant",
+			throw MathISyntaxError(
+				"the expression cannot go after a constant",
+				_Src,
 				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
-				});
+			);
 
 			return false;
 		}
@@ -108,7 +93,7 @@ bool expr_num_const_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return true;
 }
 
-bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	TokenType type0 = _Tokens.at(_Offset).type;
 
 	if (type0 >= expr_num_const && type0 <= var_enum) {
@@ -119,53 +104,58 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 
 		if (type1 >= bin_op_pow && type1 <= bool_bin_op_or) {
 			if (type1 == bin_op_assign && type0 != expr_var) {
-				set_syntax_error({
+				throw MathISyntaxError(
 					"the '=' operator can only go after the name or function declaration",
+					_Src,
 					_Tokens.at(_Offset).start,
 					_Tokens.at(_Offset + 1).end
-					});
+				);
 
 				return false;
 			}
 
 			if (!is_elem_exist(_Tokens, _Offset + 2)) {
-				set_syntax_error({
-					"after '" + _Tokens.at(_Offset + 1).value + "' the expression is expected",
+				throw MathISyntaxError(
+					std::vformat("after '{}' the expression is expected", std::make_format_args(_Tokens.at(_Offset + 1).value)),
+					_Src,
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 1).end
-					});
+				);
 
 				return false;
 			}
 
-			bool next_expr = expr_rule(_Tokens, _Offset + 2);
+			bool next_expr = expr_rule(_Tokens, _Offset + 2, _Src);
 
 			if (_Tokens.at(_Offset + 2).type == stmt_func_decl) {
-				set_syntax_error({
-					"after '" + _Tokens.at(_Offset + 2).value + "' the expression is expected",
+				throw MathISyntaxError(
+					std::vformat("after '{}' the expression is expected", std::make_format_args(_Tokens.at(_Offset + 2).value)),
+					_Src,
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
-					});
+				);
 
 				return false;
 			}
 
 			if (!next_expr) {
-				set_syntax_error({
+				throw MathISyntaxError(
 					"the expression is expected",
+					_Src,
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
-					});
+				);
 
 				return false;
 			}
 
 			if ((type1 == bin_op_pow) && (_Tokens.at(_Offset + 2).type == expr_un_op)) {
-				set_syntax_error({
-					"not unary expression is expected",
+				throw MathISyntaxError(
+					"'not' unary expression is expected",
+					_Src,
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
-					});
+				);
 
 				return false;
 			}
@@ -181,7 +171,7 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return false;
 }
 
-bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	TokenType type0 = _Tokens.at(_Offset).type;
 
 	if (type0 >= expr_num_const && type0 <= var_enum && is_elem_exist(_Tokens, _Offset + 1)) {
@@ -189,23 +179,25 @@ bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 
 		if (type1 == sym_comma) {
 			if (!is_elem_exist(_Tokens, _Offset + 2)) {
-				set_syntax_error({
+				throw MathISyntaxError(
 					"the expression is expected",
+					_Src,
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 1).end
-					});
+				);
 
 				return false;
 			}
 
-			bool next_expr = expr_rule(_Tokens, _Offset + 2);
+			bool next_expr = expr_rule(_Tokens, _Offset + 2, _Src);
 
 			if (!next_expr) {
-				set_syntax_error({
+				throw MathISyntaxError(
 					"the expression is expected",
+					_Src,
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
-					});
+				);
 
 				return false;
 			}
@@ -225,18 +217,19 @@ bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return false;
 }
 
-bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	TokenType type0 = _Tokens.at(_Offset).type;
 
 	if (type0 != sym_lpar)
 		return false;
 
 	if (!is_elem_exist(_Tokens, _Offset + 1)) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after '(' the expression is expected",
+			_Src,
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset).end
-			});
+		);
 
 		return false;
 	}
@@ -247,14 +240,15 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	do {
 		current_size = _Tokens.size();
 
-		next_expr = expr_rule(_Tokens, _Offset + 1);
+		next_expr = expr_rule(_Tokens, _Offset + 1, _Src);
 
 		if (!next_expr && (current_size != _Tokens.size())) {
-			set_syntax_error({
+			throw MathISyntaxError(
 				"after '(' the expression is expected",
+				_Src,
 				_Tokens.at(_Offset).start,
 				_Tokens.at(_Offset + 1).end
-				});
+			);
 
 			return false;
 		}
@@ -262,21 +256,23 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	} while (current_size != _Tokens.size());
 
 	if (_Tokens.at(_Offset + 1).type == stmt_func_decl) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after '(' the expression is expected",
+			_Src,
 			_Tokens.at(_Offset).start,
 			_Tokens.at(_Offset + 1).end
-			});
+		);
 
 		return false;
 	}
 
 	if (!is_elem_exist(_Tokens, _Offset + 2)) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after expression the ')' is expected",
+			_Src,
 			_Tokens.at(_Offset + 1).start,
 			_Tokens.at(_Offset + 1).end
-			});
+		);
 
 		return false;
 	}
@@ -284,11 +280,12 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	TokenType type2 = _Tokens.at(_Offset + 2).type;
 
 	if (type2 != sym_rpar) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after expression the ')' is expected",
+			_Src,
 			_Tokens.at(_Offset + 1).start,
 			_Tokens.at(_Offset + 2).end
-			});
+		);
 
 		return false;
 	}
@@ -300,7 +297,7 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return true;
 }
 
-bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
+bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, const std::string_view& _Src) {
 	if (_Tokens.at(_Offset).type != expr_var)
 		return false;
 
@@ -311,11 +308,12 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 		return false;
 
 	if (!is_elem_exist(_Tokens, _Offset + 2)) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after '(' the expected is expected",
+			_Src,
 			_Tokens.at(_Offset + 1).start,
 			_Tokens.at(_Offset + 1).end
-			});
+		);
 
 		return false;
 	}
@@ -326,14 +324,15 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	do {
 		current_size = _Tokens.size();
 
-		next_expr = expr_rule(_Tokens, _Offset + 2);
+		next_expr = expr_rule(_Tokens, _Offset + 2, _Src);
 
 		if (!next_expr && (current_size != _Tokens.size())) {
-			set_syntax_error({
+			throw MathISyntaxError(
 				"after '(' the expression is expected",
+				_Src,
 				_Tokens.at(_Offset + 1).start,
 				_Tokens.at(_Offset + 2).end
-				});
+			);
 
 			return false;
 		}
@@ -341,11 +340,12 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	} while (current_size != _Tokens.size());
 
 	if (!is_elem_exist(_Tokens, _Offset + 3)) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after expression the ')' is expected",
+			_Src,
 			_Tokens.at(_Offset + 2).start,
 			_Tokens.at(_Offset + 2).end
-			});
+		);
 
 		return false;
 	}
@@ -353,11 +353,12 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	bool next_sym_rpar = _Tokens.at(_Offset + 3).type == sym_rpar;
 
 	if (!next_sym_rpar) {
-		set_syntax_error({
+		throw MathISyntaxError(
 			"after expression the ')' is expected",
+			_Src,
 			_Tokens.at(_Offset + 2).start,
 			_Tokens.at(_Offset + 3).end
-			});
+		);
 
 		return false;
 	}
@@ -368,15 +369,16 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 
 	if ((expr_type == var_enum || expr_type == expr_var) && next_assign_op) {
 		while (is_elem_exist(_Tokens, _Offset + 6)) {
-			next_expr = expr_rule(_Tokens, _Offset + 5);
+			next_expr = expr_rule(_Tokens, _Offset + 5, _Src);
 		}
 
 		if (!next_expr || (_Tokens.at(_Offset + 5).type == stmt_func_decl)) {
-			set_syntax_error({
+			throw MathISyntaxError(
 				"after '=' the expression is expected",
+				_Src,
 				_Tokens.at(_Offset + 4).start,
 				_Tokens.at(_Offset + 5).end
-				});
+			);
 
 			return false;
 		}
@@ -398,14 +400,11 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset) {
 	return true;
 }
 
-bool rule(std::vector<Token>& _Tokens) {
+void rule(std::vector<Token>& _Tokens, const std::string_view& _Src) {
 	do {
-		bool res = expr_rule(_Tokens, 0);
-
+		bool res = expr_rule(_Tokens, 0, _Src);
 		if (!res)
-			return false;
+			return;
 
 	} while (_Tokens.size() != 1);
-
-	return true;
 }
