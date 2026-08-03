@@ -17,12 +17,12 @@
 	4. Runtime error
 */
 
-class MathIError : public std::exception {
+class MathIError {
 public:
 	virtual ~MathIError() = default;
 
-	const char* what() const override {
-		return err_msg.c_str();
+	inline std::string get_error() const {
+		return err_msg;
 	}
 
 protected:
@@ -39,7 +39,7 @@ protected:
 			"mathi: {} error: {}\nmathi: {}\n{}{}\n\n",
 			_Tag, _Desc, _Src,
 			std::string(_Start + 7, ' '), 
-			std::string(_End - _Start + 1, '^')
+			std::string(_End - _Start, '^')
 		);
 	}
 };
@@ -83,5 +83,10 @@ public:
 
 	virtual ~MathIRuntimeError() noexcept = default;
 };
+
+void __mathi_make_error(MathIError&& _Error);
+std::string __mathi_get_error();
+bool __mathi_is_ok();
+void __mathi_clear_error();
 
 #endif // !__MATHI_ERRORS_H__

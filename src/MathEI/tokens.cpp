@@ -23,7 +23,7 @@ static bool is_long_spec_symbol(char ch1, char ch2) {
 		|| (ch1 == '!' && ch2 == '=');
 }
 
-void Tokenizer::parse(const std::string_view& _Str) {
+void Tokenizer::parse(const std::string& _Str, std::vector<Token>& _Tokens) {
     const auto start = _Str.begin();
     auto tmp_start = _Str.begin(), end = _Str.end();
 
@@ -36,7 +36,7 @@ void Tokenizer::parse(const std::string_view& _Str) {
             size_t sub_start = std::distance(start, tmp_start),
                 sub_end = std::distance(start, tmp_end);
 
-            m_Tokens.push_back({
+            _Tokens.push_back({
                 [&]() -> TokenType {
                     std::string tok_str(tmp_start, tmp_end);
                     if (tok_str == "and") return TokenType::bool_bin_op_and;
@@ -48,7 +48,7 @@ void Tokenizer::parse(const std::string_view& _Str) {
                 sub_start, sub_end
             });
 
-            tmp_start = tmp_end;
+            tmp_start = tmp_end; 
         }
 
         else if (std::isdigit(*tmp_start)) {
@@ -68,13 +68,14 @@ void Tokenizer::parse(const std::string_view& _Str) {
                 sub_end = std::distance(start, tmp_end);
 
             if (invalid_float) {
-                throw MathIParseError(
+                __mathi_make_error(MathIParseError(
                     _Str, "invalid floating number",
                     sub_start, sub_end
-                );
+                ));
+                return;
             }
 
-            m_Tokens.push_back({
+            _Tokens.push_back({
                 TokenType::expr_num_const,
                 _Str.substr(sub_start, sub_end - sub_start),
                 sub_start, sub_end
@@ -86,25 +87,25 @@ void Tokenizer::parse(const std::string_view& _Str) {
             size_t sub_start = std::distance(start, tmp_start),
                 sub_end = std::distance(start, std::next(tmp_start, 2));
 
-            m_Tokens.push_back({
+            _Tokens.push_back({
                 [&]() -> TokenType {
-                    char ch1 = *tmp_start, ch2 = *std::next(tmp_start);
-                    if (ch1 == '<' && ch2 == '=') return TokenType::bool_bin_op_less_eq;
-                    if (ch1 == '>' && ch2 == '=') return TokenType::bool_bin_op_more_eq;
-                    if (ch1 == '=' && ch2 == '=') return TokenType::bool_bin_op_eq;
-                    if (ch1 == '!' && ch2 == '=') return TokenType::bool_bin_op_not_eq;
+                    char ch1 = *tmp_start;
+                    if (ch1 == '<') return TokenType::bool_bin_op_less_eq;
+                    if (ch1 == '>') return TokenType::bool_bin_op_more_eq;
+                    if (ch1 == '=') return TokenType::bool_bin_op_eq;
+                    if (ch1 == '!') return TokenType::bool_bin_op_not_eq;
                     return TokenType::nothing;
                 }(),
                 _Str.substr(sub_start, sub_end - sub_start),
                 sub_start, sub_end
-                });
+            });
             tmp_start += 2;
         }
         else if (is_spec_symbol(*tmp_start)) {
             size_t sub_start = std::distance(start, tmp_start),
-                sub_end = std::distance(start, std::next(tmp_start, 2));
+                sub_end = std::distance(start, std::next(tmp_start));
 
-            m_Tokens.push_back({
+            _Tokens.push_back({
                 [&]() -> TokenType {
                     switch (*tmp_start) {
                     case ',': return TokenType::sym_comma;
@@ -115,10 +116,20 @@ void Tokenizer::parse(const std::string_view& _Str) {
                     case '*': return TokenType::bin_op_mul;
                     case '/': return TokenType::bin_op_div;
                     case '+': return TokenType::bin_op_add;
-                    case '-': return TokenType::bin_op_sub;
                     case '=': return TokenType::bin_op_assign;
                     case '<': return TokenType::bool_bin_op_less;
                     case '>': return TokenType::bool_bin_op_more;
+                    case '-': {
+                        if (_Tokens.size() == 0)
+                            return TokenType::un_op_sub;
+                        
+                        auto prev_type = std::prev(_Tokens.end())->type;
+
+                        if (prev_type != expr_num_const && prev_type != expr_var && prev_type != sym_rpar)
+                            return TokenType::un_op_sub;
+
+                        return TokenType::bin_op_sub;
+                    }
                     default: return TokenType::nothing;
                     }
                 }(),
@@ -131,11 +142,12 @@ void Tokenizer::parse(const std::string_view& _Str) {
             ++tmp_start;
         }
         else {
-            throw MathIParseError(
+            __mathi_make_error(MathIParseError(
                 _Str, std::format("invalid symbol '{}'", *tmp_start),
                 std::distance(start, tmp_start),
                 std::distance(start, std::next(tmp_start))
-            );
+            ));
+            return;
         }
     }
 }

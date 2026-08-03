@@ -200,11 +200,8 @@ class Tokenizer {
 	friend class MathI;
 	friend class Parser;
 
-private:
-	std::vector<Token> m_Tokens;
-
 public:
-	void parse(const std::string_view& _Str);
+	static void parse(const std::string& _Str, std::vector<Token>& _Tokens);
 };
 
 #endif // !__TOKENS_H__

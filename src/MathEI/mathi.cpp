@@ -79,7 +79,7 @@ size_t find_type_in_range_ast(TokenType type, const std::vector<AST*>& ast, cons
 size_t find_func_call_in_range_ast(const std::vector<AST*>& ast, const std::pair<size_t, size_t>& range) {
 	const size_t length = ast.size() - 1;
 
-	for (size_t i = 0; i < length; ++i) {
+	for (size_t i = 0; i < length - 1; ++i) {
 		if ((ast.at(i)->token.type == expr_var) && (ast.at(i + 1)->token.type == expr_par)) {
 			if ((i + 2 < length) && (ast.at(i + 2)->token.type != bin_op_assign))
 				return i;
@@ -111,12 +111,13 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 	// 0. call
 
 	while ((operator_pos = find_func_call_in_range_ast(ast, range)) != std::string::npos) {
+		__debugbreak();
 		ast.at(operator_pos)->token.type = expr_func_call;
 		ast.at(operator_pos)->nodes.push_back(ast.at(operator_pos + 1));
 
 		ast.erase(ast.begin() + operator_pos + 1);
 
-		range.second -= 1;
+		range.second -= 1; __debugbreak();
 	}
 
 	// 1. pow
@@ -172,13 +173,16 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 	// 5. enum
 
 	while ((operator_pos = find_type_in_range_ast(sym_comma, ast, range)) != std::string::npos) {
+		__debugbreak();
 		if (ast.at(operator_pos - 1)->token.type == TokenType::expr_enum) {
+			__debugbreak();
 			ast.at(operator_pos - 1)->nodes.push_back(ast.at(operator_pos + 1));
 
 			ast.erase(ast.begin() + operator_pos);
 			ast.erase(ast.begin() + operator_pos);
 		}
 		else {
+			__debugbreak();
 			ast.at(operator_pos)->token.type = expr_enum;
 			ast.at(operator_pos)->nodes.push_back(ast.at(operator_pos - 1));
 			ast.at(operator_pos)->nodes.push_back(ast.at(operator_pos + 1));
@@ -187,7 +191,7 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 			ast.erase(ast.begin() + operator_pos - 1);
 		}
 
-		range.second -= 2;
+		range.second -= 2; __debugbreak();
 	}
 
 	// 6. func decl
@@ -275,14 +279,12 @@ size_t MathI::get_object_index_by_name(const std::string_view& _Name) {
 void MathI::generate_ast(const std::vector<Token>& _Tokens) {
 	std::vector<AST*> ast;
 
-	for (auto& token : _Tokens) {
+	for (auto& token : _Tokens)
 		ast.push_back(new AST(token));
-	}
 
 	while (ast.size() != 1) {
 		std::pair<size_t, size_t> parse_range = get_parse_range(ast);
-
-		generate_range_ast(ast, parse_range);
+		generate_range_ast(ast, parse_range); 
 	}
 
 	m_AST = ast.at(0);
@@ -311,11 +313,11 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		for (auto& arg : param_enum) {
 			for (auto& name : args) {
 				if (name == arg->token.value) {
-					throw MathICodeGenError(
+					__mathi_make_error(MathICodeGenError(
 						m_CurrentSrc,
 						"function declaration has a similar parameter name",
 						arg->token.start, arg->token.end
-					);
+					));
 
 					return;
 				}
@@ -633,11 +635,12 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		{
 		case Opcode::push: {
 			if (stack_counter >= max_stack_length) {
-				throw MathIRuntimeError(
+				__mathi_make_error(MathIRuntimeError(
 					m_CurrentSrc,
 					"stack overflow",
 					0, m_CurrentSrc.size() - 1
-				);
+				));
+				return nullptr;
 			}
 
 			MathIObject* tmp = &objects[(size_t)inst1];
@@ -653,11 +656,12 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 
 		case Opcode::push_const: {
 			if (stack_counter >= max_stack_length) {
-				throw MathIRuntimeError(
+				__mathi_make_error(MathIRuntimeError(
 					m_CurrentSrc,
 					"stack overflow",
 					0, m_CurrentSrc.size() - 1
-				);
+				));
+				return nullptr;
 			}
 
 			stack[stack_counter] = (MathIObject*)inst1;
@@ -671,12 +675,15 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			MathIObject& right_obj = *stack[stack_counter - 1];
 			stack_counter -= 1;
 
+			__debugbreak();
+
 			if (left_obj.callable || right_obj.callable) {
-				throw MathIRuntimeError(
+				__mathi_make_error(MathIRuntimeError(
 					m_CurrentSrc,
 					"it is not possible to perform a binary operation with the called object",
 					0, m_CurrentSrc.size() - 1
-				);
+				));
+				return nullptr;
 			}
 
 			double left_val, right_val;
@@ -688,11 +695,12 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto left_mathi_obj = static_cast<MathIVariable*>(left_obj.val_ptr);
 
 				if (left_mathi_obj == nullptr || !left_mathi_obj->initialized) {
-					throw MathIRuntimeError(
+					__mathi_make_error(MathIRuntimeError(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					);
+					));
+					return nullptr;
 				}
 
 				left_val = static_cast<MathIVariable*>(left_obj.val_ptr)->value;
@@ -705,11 +713,12 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto right_mathi_obj = static_cast<MathIVariable*>(right_obj.val_ptr);
 
 				if (right_mathi_obj == nullptr || !right_mathi_obj->initialized) {
-					throw MathIRuntimeError(
+					__mathi_make_error(MathIRuntimeError(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					);
+					));
+					return nullptr;
 				}
 
 				right_val = static_cast<MathIVariable*>(right_obj.val_ptr)->value;
@@ -740,7 +749,7 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 
 			stack[stack_counter - 1] = new_obj;
 			i += 1;
-
+			__debugbreak();
 			break;
 		}
 		case Opcode::un_op: {
@@ -755,12 +764,13 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			else {
 				auto left_mathi_obj = static_cast<MathIVariable*>(obj.val_ptr);
 
-				if (!left_mathi_obj->initialized) {
-					throw MathIRuntimeError(
+				if (left_mathi_obj == nullptr || !left_mathi_obj->initialized) {
+					__mathi_make_error(MathIRuntimeError(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					);
+					));
+					return nullptr;
 				}
 
 				obj_val = static_cast<MathIVariable*>(obj.val_ptr)->value;
@@ -789,25 +799,45 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		case Opcode::call: {
 			size_t arg_count = (size_t)inst1;
 			size_t stack_frame = stack_counter - arg_count;
-
+			__debugbreak();
 			MathIObject& target_object = *stack[stack_counter - 1];
 
 			if (!target_object.callable) {
-				throw MathIRuntimeError(
+				__mathi_make_error(MathIRuntimeError(
 					m_CurrentSrc,
 					"the objects is not callable",
 					0, m_CurrentSrc.size() - 1
-				);
+				));
+				return nullptr;
+			}
+
+			if (target_object.val_ptr == nullptr) {
+				__mathi_make_error(MathIRuntimeError(
+					m_CurrentSrc,
+					"the object has not been initialized",
+					0, m_CurrentSrc.size() - 1
+				));
+				return nullptr;
+			}
+
+			if (target_object.val_ptr == nullptr) {
+				__mathi_make_error(MathIRuntimeError(
+					m_CurrentSrc,
+					"function has not been initialized",
+					0, m_CurrentSrc.size() - 1
+				));
+				return nullptr;
 			}
 
 			MathiIFunction& function = *(MathiIFunction*)target_object.val_ptr;
 
 			if (function.number_of_params != arg_count) {
-				throw MathIRuntimeError(
+				__mathi_make_error(MathIRuntimeError(
 					m_CurrentSrc,
 					std::format("{} arguments are passed to the function instead of {}", arg_count, function.number_of_params),
 					0, m_CurrentSrc.size() - 1
-				);
+				));
+				return nullptr;
 			}
 
 			size_t new_offset = stack_counter - function.number_of_params - 1;
@@ -861,11 +891,12 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				MathIVariable* target_const = (MathIVariable*)target.val_ptr;
 
 				if (target_const == nullptr || !target_const->initialized) {
-					throw MathIRuntimeError(
+					__mathi_make_error(MathIRuntimeError(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					);
+					));
+					return nullptr;
 				}
 
 				MathIVariable* new_var = new MathIVariable;
@@ -918,27 +949,91 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 	return stack[stack_counter - 1];
 }
 
+static const char* debug_token_type_to_str(TokenType tt) {
+	switch (tt) {
+	case nothing: return "nothing";
+	case sym_eos: return "sym_eos";
+	case sym_comma: return "sym_comma";
+	case sym_semicolon: return "sym_semicolon";
+	case sym_lpar: return "sym_lpar";
+	case sym_rpar: return "sym_rpar";
+	case bin_op_pow: return "bin_op_pow";
+	case bin_op_mul: return "bin_op_mul";
+	case bin_op_div: return "bin_op_div";
+	case bin_op_add: return "bin_op_add";
+	case bin_op_sub: return "bin_op_sub";
+	case bin_op_assign: return "bin_op_assign";
+	case bool_bin_op_less: return "bool_bin_op_less";
+	case bool_bin_op_more: return "bool_bin_op_more";
+	case bool_bin_op_less_eq: return "bool_bin_op_less_eq";
+	case bool_bin_op_more_eq: return "bool_bin_op_more_eq";
+	case bool_bin_op_eq: return "bool_bin_op_eq";
+	case bool_bin_op_not_eq: return "bool_bin_op_not_eq";
+	case bool_bin_op_and: return "bool_bin_op_and";
+	case bool_bin_op_or: return "bool_bin_op_or";
+	case bool_un_op_not: return "bool_un_op_not";
+	case un_op_sub: return "un_op_sub";
+	case expr_num_const: return "expr_num_const";
+	case expr_var: return "expr_var";
+	case expr_un_op: return "expr_un_op";
+	case expr_bin_op: return "expr_bin_op";
+	case expr_par: return "expr_par";
+	case expr_func_call: return "expr_func_call";
+	case expr_cond: return "expr_cond";
+	case expr_enum: return "expr_enum";
+	case var_enum: return "var_enum";
+	case expr: return "expr";
+	case stmt_func_decl: return "stmt_func_decl";
+	case stmt: return "stmt";
+	case final_instruction: return "final_instruction";
+	}
+	return "<TokenType is unknown>";
+}
+
+static void debug_print_tokens(const std::vector<Token> tokens) {
+	for (auto& tok : tokens)
+		std::cout << std::format("[{} '{}' {}:{}] ", 
+			debug_token_type_to_str(tok.type),
+			tok.value,
+			tok.start,
+			tok.end
+		);
+	std::cout << '\n';
+}
+
 double MathI::eval(const std::string& _Str) {
 	double result = 0.0;
 
 	for (auto& range : divide_into_expr(_Str)) {
-		Tokenizer tokens;
+		clear_error();
+
+		std::vector<Token> tokens;
 
 		std::string tmp_src = _Str.substr(range.first, range.second - range.first);
-		m_CurrentSrc = tmp_src;
-		tokens.parse(m_CurrentSrc);
+		Tokenizer::parse(tmp_src, tokens); 
 		
-		std::vector<Token> token_array{ tokens.m_Tokens };
-		rule(token_array, m_CurrentSrc);
+		if (!__mathi_is_ok()) return 0.0;
 
-		generate_ast(tokens.m_Tokens);
-		stack_counter = 0;	
+		debug_print_tokens(tokens); 
+		
+		{
+			std::vector<Token> token_array = tokens;
+			rule(token_array, tmp_src); 
+		}
 
-		gen_executable();
+		if (!__mathi_is_ok()) return 0.0;
 
-		MathIObject* obj_res = (MathIObject*)execute(opcode); 
+		// generate_ast(tokens.m_Tokens); __debugbreak();
 
-		std::cout << "\nResult >> " << get_mathi_object_info(obj_res) << '\n';
+		// stack_counter = 0;	
+		
+		// gen_executable(); __debugbreak();
+
+		// if (!__mathi_is_ok()) return 0.0;
+		// __debugbreak();
+		// MathIObject* obj_res = (MathIObject*)execute(opcode); 
+
+		// std::cout << "\nResult >> " << get_mathi_object_info(obj_res) << '\n';
 	}
 
 	return 0;

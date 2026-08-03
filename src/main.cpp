@@ -9,6 +9,7 @@ int main() {
 	MathI mathi;
 
 	// ERROR: f(x) = (a = x)
+	// ERROR: f(as) = 12)
 
 	// TODO: 
 	// * unique_ptr
@@ -25,12 +26,10 @@ int main() {
 			continue;
 		}
 		
-		try {
-			mathi.eval(str); 
-		}
-		catch (const MathIError& err) {
-			std::cout << err.what();
-		}
+		mathi.eval(str); 
+
+		if (!mathi.ok())
+			std::cout << std::endl << mathi.get_error();
 	}
 
 	return 0;

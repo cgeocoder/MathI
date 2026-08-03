@@ -6,6 +6,7 @@
 #include <string>
 #include <format>
 #include "tokens.h"
+#include "errors.h"
 
 class MathIObject;
 
@@ -121,8 +122,13 @@ private:
 	void debug_print_opcode(const std::vector<Opcode>& _Opcode);
 	MathIObject* execute(std::vector<Opcode>& _Opcode);
 
+	inline void clear_error() { __mathi_clear_error(); }
+
 public:
 	double eval(const std::string& _Str);
+
+	inline bool ok() { return __mathi_is_ok(); }
+	inline std::string get_error() { return __mathi_get_error(); }
 };
 
 #endif // !__MATH_EXPRESSION_INTERPRETER_H__
