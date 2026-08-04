@@ -2,6 +2,7 @@
 #include "parser.h"
 #include "errors.h"
 #include <cmath>
+#include <algorithm>
 
 typedef double (*b1func)(double);
 typedef double (*b2func)(double, double);
@@ -42,7 +43,7 @@ std::pair<size_t, size_t> get_parse_range(const std::vector<AST*>& ast) {
 		TokenType type = ast.at(i)->token.type;
 
 		if (type == sym_rpar)
-			return { max_lpar_depth_pos, i };
+			return { max_lpar_depth_pos, i + 1 }; // was just 'i'
 	}
 
 	return { 0, ast.size() };
@@ -58,18 +59,43 @@ size_t find_type_in_range_ast(TokenType type, const std::vector<AST*>& ast, cons
 				return i;
 		}
 	}
-	else if (type == bin_op_pow) {
+	else if (type == bin_op_pow || type == un_op_sub || type == bool_un_op_not) {
 		// right-associative operator
 
-		for (long long i = range.second - 1; i >= (long long)range.first; --i) {
-			if (ast.at(i)->token.type == type && ast.at(i)->nodes.empty())
-				return i;
+		__debugbreak();
+
+		// FIX HERE
+		// FIX HERE
+		// FIX HERE
+		// FIX HERE
+		// FIX HERE
+		// FIX HERE
+
+		auto it = std::find_if(
+			std::next(ast.rbegin(), ast.size() - range.second),
+			std::prev(ast.rend(), range.first),
+			[&type](AST* node) -> bool {
+				return node->token.type == type && node->nodes.empty();
+			}
+		);
+
+		__debugbreak();
+
+		if (it != ast.rend()) {
+			return std::distance(ast.begin(), it.base() - 1);
 		}
 	}
 	else {
-		for (size_t i = range.first; i < range.second; ++i) {
-			if (ast.at(i)->token.type == type && ast.at(i)->nodes.empty())
-				return i;
+		auto it = std::find_if(
+			std::next(ast.begin(), range.first),
+			std::prev(ast.end(), ast.size() - range.second),
+			[&type](AST* node) -> bool {
+				return node->token.type == type && node->nodes.empty();
+			}
+		);
+
+		if (it != ast.end()) {
+			return std::distance(ast.begin(), it);
 		}
 	}
 
