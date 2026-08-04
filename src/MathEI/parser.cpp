@@ -269,7 +269,6 @@ bool expr_enum_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetadata
 }
 
 bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetadata& _Md) {
-
 	TokenType type0 = _Tokens.at(_Offset).type;
 
 	if (type0 != sym_lpar)
@@ -393,18 +392,15 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMet
 	}
 
 	bool next_expr;
-	size_t current_size;
 
 	do {
-		current_size = _Tokens.size();
-
 		next_expr = expr_rule(_Tokens, _Offset + 2, _Md);
 
 		if (!next_expr) {
 			return false;
 		}
 
-	} while (current_size != _Tokens.size());
+	} while ();
 
 	if (!is_elem_exist(_Tokens, _Offset + 3)) {
 		__mathi_make_error(MathISyntaxError(
