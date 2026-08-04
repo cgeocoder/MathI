@@ -11,7 +11,8 @@ struct _ParserMetadata {
 	size_t par_depth;
 };
 
-inline bool is_elem_exist(const std::vector<Token>& _Vector, size_t _Offset) {
+template<class _Ty>
+inline bool is_elem_exist(const std::vector<_Ty>& _Vector, size_t _Offset) {
 	return _Vector.size() > _Offset;
 }
 

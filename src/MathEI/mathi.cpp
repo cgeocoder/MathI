@@ -18,6 +18,7 @@ std::vector<std::pair<size_t, size_t>> divide_into_expr(const std::string& _Str)
 	return res;
 }
 
+// @return range [start, end)
 std::pair<size_t, size_t> get_parse_range(const std::vector<AST*>& ast) {
 	size_t lpar_depth = 0, 
 		max_lpar_depth = 0, 
@@ -62,41 +63,32 @@ size_t find_type_in_range_ast(TokenType type, const std::vector<AST*>& ast, cons
 	else if (type == bin_op_pow || type == un_op_sub || type == bool_un_op_not) {
 		// right-associative operator
 
-		__debugbreak();
-
-		// FIX HERE
-		// FIX HERE
-		// FIX HERE
-		// FIX HERE
-		// FIX HERE
-		// FIX HERE
+		auto rbegin_it = std::next(ast.rbegin(), ast.size() - range.second),
+			rend_it = std::prev(ast.rend(), range.first);
 
 		auto it = std::find_if(
-			std::next(ast.rbegin(), ast.size() - range.second),
-			std::prev(ast.rend(), range.first),
+			rbegin_it, rend_it,
 			[&type](AST* node) -> bool {
 				return node->token.type == type && node->nodes.empty();
 			}
 		);
 
-		__debugbreak();
-
-		if (it != ast.rend()) {
+		if (it != rend_it)
 			return std::distance(ast.begin(), it.base() - 1);
-		}
 	}
 	else {
+		auto begin_it = std::next(ast.begin(), range.first),
+			end_it = std::prev(ast.end(), ast.size() - range.second);
+
 		auto it = std::find_if(
-			std::next(ast.begin(), range.first),
-			std::prev(ast.end(), ast.size() - range.second),
+			begin_it, end_it,
 			[&type](AST* node) -> bool {
 				return node->token.type == type && node->nodes.empty();
 			}
 		);
 
-		if (it != ast.end()) {
+		if (it != end_it)
 			return std::distance(ast.begin(), it);
-		}
 	}
 
 	return std::string::npos;
@@ -105,12 +97,12 @@ size_t find_type_in_range_ast(TokenType type, const std::vector<AST*>& ast, cons
 size_t find_func_call_in_range_ast(const std::vector<AST*>& ast, const std::pair<size_t, size_t>& range) {
 	const size_t length = ast.size() - 1;
 
-	for (size_t i = 0; i < length - 1; ++i) {
+	for (size_t i = range.first; i < range.second - 1; ++i) {
 		if ((ast.at(i)->token.type == expr_var) && (ast.at(i + 1)->token.type == expr_par)) {
-			if ((i + 2 < length) && (ast.at(i + 2)->token.type != bin_op_assign))
+			if (!is_elem_exist(ast, 2))
 				return i;
 
-			else if ((i + 2 >= length))
+			else if (ast.at(i + 2)->token.type != bin_op_assign)
 				return i;
 		}
 	}
@@ -137,13 +129,12 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 	// 0. call
 
 	while ((operator_pos = find_func_call_in_range_ast(ast, range)) != std::string::npos) {
-		__debugbreak();
 		ast.at(operator_pos)->token.type = expr_func_call;
 		ast.at(operator_pos)->nodes.push_back(ast.at(operator_pos + 1));
 
 		ast.erase(ast.begin() + operator_pos + 1);
 
-		range.second -= 1; __debugbreak();
+		range.second -= 1; 
 	}
 
 	// 1. pow
@@ -199,16 +190,13 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 	// 5. enum
 
 	while ((operator_pos = find_type_in_range_ast(sym_comma, ast, range)) != std::string::npos) {
-		__debugbreak();
 		if (ast.at(operator_pos - 1)->token.type == TokenType::expr_enum) {
-			__debugbreak();
 			ast.at(operator_pos - 1)->nodes.push_back(ast.at(operator_pos + 1));
 
 			ast.erase(ast.begin() + operator_pos);
 			ast.erase(ast.begin() + operator_pos);
 		}
 		else {
-			__debugbreak();
 			ast.at(operator_pos)->token.type = expr_enum;
 			ast.at(operator_pos)->nodes.push_back(ast.at(operator_pos - 1));
 			ast.at(operator_pos)->nodes.push_back(ast.at(operator_pos + 1));
@@ -217,7 +205,7 @@ void generate_range_ast(std::vector<AST*>& ast, std::pair<size_t, size_t> range)
 			ast.erase(ast.begin() + operator_pos - 1);
 		}
 
-		range.second -= 2; __debugbreak();
+		range.second -= 2; 
 	}
 
 	// 6. func decl
