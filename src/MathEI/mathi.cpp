@@ -1023,7 +1023,11 @@ double MathI::eval(const std::string& _Str) {
 
 		if (!__mathi_is_ok()) return 0.0;
 
-		// generate_ast(tokens.m_Tokens); __debugbreak();
+		generate_ast(tokens); 
+
+		print_ast(m_AST);
+
+		// __debugbreak();
 
 		// stack_counter = 0;	
 		

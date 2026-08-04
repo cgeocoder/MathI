@@ -7,9 +7,6 @@
 
 int main() {
 	MathI mathi;
-
-	// ERROR: f(x) = (a = x)
-	// ERROR: (1)-1
 	
 	// TODO: 
 	// * unique_ptr

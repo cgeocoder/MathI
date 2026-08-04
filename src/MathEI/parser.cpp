@@ -2,7 +2,7 @@
 #include "errors.h"
 
 static bool is_expr_start(Token& tok) {
-	return tok.type == expr_var || tok.type == expr_num_const
+	return (tok.type >= expr_num_const && tok.type <= var_enum)
 		|| tok.type == sym_lpar || tok.type == un_op_sub
 		|| tok.type == bool_un_op_not;
 }
@@ -198,7 +198,8 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetada
 				return false;
 			}
 
-			if ((type1 == bin_op_pow) && (_Tokens.at(_Offset + 2).type == expr_un_op)) {
+			// ???
+			/*if ((type1 == bin_op_pow) && (_Tokens.at(_Offset + 2).type == expr_un_op)) {
 				__mathi_make_error(MathISyntaxError(
 					_Md.src,
 					"'not' unary expression is expected",
@@ -207,7 +208,7 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetada
 				));
 
 				return false;
-			}
+			}*/
 
 			_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 			_Tokens.erase(std::next(_Tokens.begin(), _Offset));
@@ -360,13 +361,9 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetadata&
 		}
 	}
 
-	__debugbreak();
-
 	_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 	_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 	_Tokens.at(_Offset).type = expr_par;
-
-	__debugbreak();
 
 	return true;
 }
@@ -439,6 +436,7 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMet
 
 	bool next_assign_op = (_Tokens.size() > _Offset + 5) && (_Tokens.at(_Offset + 4).type == bin_op_assign);
 
+	// FUNC DECL
 	if ((expr_type == var_enum || expr_type == expr_var) && next_assign_op) {
 		while (is_elem_exist(_Tokens, _Offset + 6)) {
 			next_expr = expr_rule(_Tokens, _Offset + 5, _Md);
@@ -465,6 +463,8 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMet
 		_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 		_Tokens.at(_Offset).type = stmt_func_decl;
 	}
+
+	// FUNC CALL
 	else {
 		_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 		_Tokens.erase(std::next(_Tokens.begin(), _Offset));
