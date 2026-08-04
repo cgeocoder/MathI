@@ -9,8 +9,8 @@ int main() {
 	MathI mathi;
 
 	// ERROR: f(x) = (a = x)
-	// ERROR: f(as) = 12)
-
+	// ERROR: (1)-1
+	
 	// TODO: 
 	// * unique_ptr
 	// * user_decl functions

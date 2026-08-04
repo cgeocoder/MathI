@@ -183,7 +183,7 @@ bool expr_bin_op_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetada
 					_Tokens.at(_Offset + 1).start,
 					_Tokens.at(_Offset + 2).end
 				));
-
+				
 				return false;
 			}
 
@@ -355,14 +355,18 @@ bool expr_par_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMetadata&
 				_Tokens.at(_Offset + 2).start,
 				_Tokens.at(_Offset + 3).end
 			));
-
+			
 			return false;
 		}
 	}
 
+	__debugbreak();
+
 	_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 	_Tokens.erase(std::next(_Tokens.begin(), _Offset));
 	_Tokens.at(_Offset).type = expr_par;
+
+	__debugbreak();
 
 	return true;
 }
@@ -397,18 +401,9 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMet
 	do {
 		current_size = _Tokens.size();
 
-		// next_expr = expr_rule(_Tokens, _Offset + 2, _Md);
+		next_expr = expr_rule(_Tokens, _Offset + 2, _Md);
 
-		if (!expr_rule(_Tokens, _Offset + 2, _Md)) {
-			/*__mathi_make_error(MathISyntaxError(
-				_Md.src,
-				"after '(' the expression is expected",
-				_Tokens.at(_Offset + 1).start,
-				_Tokens.at(_Offset + 2).end
-			));*/
-
-			__debugbreak();
-
+		if (!next_expr) {
 			return false;
 		}
 
@@ -447,9 +442,12 @@ bool expr_func_decl_rule(std::vector<Token>& _Tokens, size_t _Offset, _ParserMet
 	if ((expr_type == var_enum || expr_type == expr_var) && next_assign_op) {
 		while (is_elem_exist(_Tokens, _Offset + 6)) {
 			next_expr = expr_rule(_Tokens, _Offset + 5, _Md);
+
+			if (!next_expr)
+				return false;
 		}
 
-		if (!next_expr || (_Tokens.at(_Offset + 5).type == stmt_func_decl)) {
+		if (_Tokens.at(_Offset + 5).type == stmt_func_decl) {
 			__mathi_make_error(MathISyntaxError(
 				_Md.src,
 				"after '=' the expression is expected",
