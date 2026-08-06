@@ -98,6 +98,8 @@ static std::string get_mathi_object_info(MathIObject* o) {
 
 class MathI {
 private:
+	MathIErrorManager m_ErrorManager;
+
 	AST* m_AST;
 	static constexpr size_t max_stack_length = 512;
 	MathIObject* stack[max_stack_length] = { 0 };
@@ -109,7 +111,7 @@ private:
 	std::vector<Opcode> opcode;
 	std::vector<MathIObject> m_Objects;
 
-	std::string_view m_CurrentSrc;
+	std::string m_CurrentSrc;
 
 	size_t get_object_index(const MathIObject& _Obj);
 	size_t get_object_index_by_name(const std::string_view& _Name);
@@ -122,13 +124,14 @@ private:
 	void debug_print_opcode(const std::vector<Opcode>& _Opcode);
 	MathIObject* execute(std::vector<Opcode>& _Opcode);
 
-	inline void clear_error() { __mathi_clear_error(); }
+	inline void clear_error() { m_ErrorManager.clear(); }
 
 public:
+	inline MathI() {}
 	double eval(const std::string& _Str);
 
-	inline bool ok() { return __mathi_is_ok(); }
-	inline std::string get_error() { return __mathi_get_error(); }
+	inline bool ok() { return m_ErrorManager.ok(); }
+	inline std::string get_error() { return m_ErrorManager.get_last_error(); }
 };
 
 #endif // !__MATH_EXPRESSION_INTERPRETER_H__

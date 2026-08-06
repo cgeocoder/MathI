@@ -23,7 +23,7 @@ static bool is_long_spec_symbol(char ch1, char ch2) {
 		|| (ch1 == '!' && ch2 == '=');
 }
 
-void Tokenizer::parse(const std::string& _Str, std::vector<Token>& _Tokens) {
+void Tokenizer::parse(const std::string& _Str, std::vector<Token>& _Tokens, MathIErrorManager& _ErrorManager) {
     const auto start = _Str.begin();
     auto tmp_start = _Str.begin(), end = _Str.end();
 
@@ -68,10 +68,10 @@ void Tokenizer::parse(const std::string& _Str, std::vector<Token>& _Tokens) {
                 sub_end = std::distance(start, tmp_end);
 
             if (invalid_float) {
-                __mathi_make_error(MathIParseError(
+                _ErrorManager.parser_error(
                     _Str, "invalid floating number",
                     sub_start, sub_end
-                ));
+                );
                 return;
             }
 
@@ -142,12 +142,12 @@ void Tokenizer::parse(const std::string& _Str, std::vector<Token>& _Tokens) {
             ++tmp_start;
         }
         else {
-            __mathi_make_error(MathIParseError(
+            _ErrorManager.parser_error(
                 _Str, std::format("invalid symbol '{}'", *tmp_start),
                 std::distance(start, tmp_start),
                 std::distance(start, std::next(tmp_start))
-            ));
-            return;
+            );
+            ++tmp_start;
         }
     }
 }

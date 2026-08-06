@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include "errors.h"
 
 enum TokenType {
 	nothing,
@@ -131,9 +132,11 @@ enum class Opcode : size_t {
 
 class Token {
 public:
+	inline Token(){}
+
 	inline Token(
 		TokenType _Type, 
-		std::string_view _Value,
+		const std::string& _Value,
 		size_t _Start,
 		size_t _End
 	)
@@ -142,58 +145,39 @@ public:
 	TokenType type;
 	std::string value;
 	size_t start, end;
-};
 
-class TokenTree {
-public:
-	inline TokenTree(
-		const Token& _Token,
-		TokenTree* _Prev
-	) : token{ _Token }, prev{ _Prev }, next{ nullptr } {}
-
-	Token token;
-	TokenTree* next, *prev;
-	std::vector<TokenTree*> nodes;
-
-	inline TokenTree* add_next(const Token& _Token) {
-		next = new TokenTree(_Token, nullptr);
-		prev = this;
-
-		std::cout << "'" << _Token.value << "'\n";
-
-		return next;
+	inline Token(const Token& _Copy) noexcept
+		: type{ _Copy.type }, value{ _Copy.value }, start{ _Copy.start }, end{ _Copy.end } {}
+	
+	inline Token(Token&& _Move) noexcept
+		: type{ _Move.type }, value{ _Move.value }, start{ _Move.start }, end{ _Move.end } 
+	{
+		_Move.start = _Move.end = 0;
+		_Move.value.clear();
+		_Move.type = TokenType::nothing;
 	}
 
-	inline void add_sub(TokenTree* _SubTree) {
-		_SubTree->prev = _SubTree->next = nullptr;
-		nodes.push_back(_SubTree);
+	inline Token& operator=(const Token& _Copy) noexcept {
+		type = _Copy.type;
+		value = _Copy.value;
+		start = _Copy.start;
+		end = _Copy.end;
+		return *this;
 	}
 
-	inline void __cdecl operator delete(void* _Block) {
-		// (void)(std::cout << __FUNCSIG__ << '\n');
+	inline Token& operator=(Token&& _Move) noexcept	{
+		type = _Move.type;
+		value = _Move.value;
+		start = _Move.start;
+		end = _Move.end;
 
-		if (_Block != nullptr)
-			delete _Block;
-
-		_Block = nullptr;
+		_Move.start = _Move.end = 0;
+		_Move.value.clear();
+		_Move.type = TokenType::nothing;
+		return *this;
 	}
 
-	inline void __cdecl operator delete[](void* _Block) {
-		// (void)(std::cout << __FUNCSIG__ << '\n');
-
-		if (_Block != nullptr)
-			delete[] _Block;
-
-		_Block = nullptr;
-	}
-
-	inline bool is_start(void) const {
-		return prev == nullptr;
-	}
-
-	inline bool is_end(void) const {
-		return next == nullptr;
-	}
+	~Token() = default;
 };
 
 class Tokenizer {
@@ -201,7 +185,11 @@ class Tokenizer {
 	friend class Parser;
 
 public:
-	static void parse(const std::string& _Str, std::vector<Token>& _Tokens);
+	static void parse(
+		const std::string& _Str, 
+		std::vector<Token>& _Tokens,
+		MathIErrorManager& _ErrorManager
+	);
 };
 
 #endif // !__TOKENS_H__

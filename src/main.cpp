@@ -13,19 +13,15 @@ int main() {
 	// * user_decl functions
 	//
 
-	while (1) {
-		std::string str;
-		std::cout << ">> ";
-		std::getline(std::cin, str);
-
+	for (std::string str; std::cout << ">> ", std::getline(std::cin, str);) {
 		if (str == ".clear") {
 			system("cls");
 			continue;
 		}
 		
-		mathi.eval(str); 
+		mathi.eval(str);
 
-		if (!mathi.ok())
+		while (!mathi.ok())
 			std::cout << std::endl << mathi.get_error();
 	}
 

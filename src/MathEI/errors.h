@@ -7,6 +7,8 @@
 #include <format>
 #include <iostream>
 #include <stdexcept>
+#include <queue>
+#include <list>
 
 /*
 	Types of error
@@ -19,74 +21,68 @@
 
 class MathIError {
 public:
+	const std::string source;
+	const std::string description;
+	const std::string type_of_error;
+
+	MathIError(const std::string& _ErrType, const std::string& _Src, const std::string& _Desc, size_t _Start, size_t _End)
+		: type_of_error{ _ErrType }, source{ _Src }, description{ _Desc }, p_Start{ _Start }, p_End{ _End }{}
+
 	virtual ~MathIError() = default;
 
-	inline std::string get_error() const {
-		return err_msg;
-	}
-
-protected:
-	std::string err_msg;
-
-	inline void make_error(
-		const std::string_view& _Tag,
-		const std::string_view& _Desc,
-		const std::string_view& _Src,
-		size_t _Start,
-		size_t _End
-	) {
-		err_msg = std::format(
+	inline std::string get_error() {
+		return std::format(
 			"mathi: {} error: {}\nmathi: {}\n{}{}\n\n",
-			_Tag, _Desc, _Src,
-			std::string(_Start + 7, ' '), 
-			std::string(_End - _Start, '^')
+			type_of_error, description, source,
+			std::string(p_Start + 7, ' '),
+			std::string(p_End - p_Start, '^')
 		);
 	}
+	
+protected:
+	const size_t p_Start, p_End;
 };
 
-class MathIParseError : public MathIError {
-public:
-	inline MathIParseError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-	{
-		make_error("parse", _Desc, _Src, _Start, _End);
+class MathIErrorManager {
+private:
+	std::list<std::unique_ptr<MathIError>> m_Errors;
+
+public:	
+	inline MathIErrorManager() {}
+	inline virtual ~MathIErrorManager() = default;
+
+	inline bool ok() const noexcept { return m_Errors.empty(); }
+	inline void clear() { m_Errors.clear(); }
+
+	inline std::string get_last_error() {
+		std::string err = m_Errors.back()->get_error();
+		m_Errors.pop_back();
+		return err;
+	}
+	
+	inline void parser_error(const std::string& _Src, const std::string& _Desc, size_t _Start, size_t _End) {
+		m_Errors.push_back(std::make_unique<MathIError>(
+			"parse", _Src, _Desc, _Start, _End
+		));
 	}
 
-	virtual ~MathIParseError() noexcept = default;
-};
-
-class MathISyntaxError : public MathIError {
-public:
-	inline MathISyntaxError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-	{
-		make_error("syntax", _Desc, _Src, _Start, _End);
-	}
-		
-	virtual ~MathISyntaxError() noexcept  = default;
-};
-
-class MathICodeGenError : public MathIError {
-public:
-	inline MathICodeGenError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-	{
-		make_error("code gen", _Desc, _Src, _Start, _End);
+	inline void syntax_error(const std::string& _Src, const std::string& _Desc, size_t _Start, size_t _End) {
+		m_Errors.push_back(std::move(std::make_unique<MathIError>(
+			"syntax", _Src, _Desc, _Start, _End
+		)));
 	}
 
-	virtual ~MathICodeGenError() noexcept = default;
-};
-
-class MathIRuntimeError : public MathIError {
-public:
-	inline MathIRuntimeError(const std::string_view& _Src, const std::string_view& _Desc, size_t _Start, size_t _End) noexcept
-	{
-		make_error("runtime", _Desc, _Src, _Start, _End);
+	inline void codegen_error(const std::string& _Src, const std::string& _Desc, size_t _Start, size_t _End) {
+		m_Errors.push_back(std::move(std::make_unique<MathIError>(
+			"code gen", _Src, _Desc, _Start, _End
+		)));
 	}
-
-	virtual ~MathIRuntimeError() noexcept = default;
+	
+	inline void runtime_error(const std::string& _Src, const std::string& _Desc, size_t _Start, size_t _End) {
+		m_Errors.push_back(std::move(std::make_unique<MathIError>(
+			"runtime", _Src, _Desc, _Start, _End
+		)));
+	}
 };
-
-void __mathi_make_error(MathIError&& _Error);
-std::string __mathi_get_error();
-bool __mathi_is_ok();
-void __mathi_clear_error();
 
 #endif // !__MATHI_ERRORS_H__

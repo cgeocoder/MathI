@@ -327,11 +327,11 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 		for (auto& arg : param_enum) {
 			for (auto& name : args) {
 				if (name == arg->token.value) {
-					__mathi_make_error(MathICodeGenError(
+					m_ErrorManager.codegen_error(
 						m_CurrentSrc,
 						"function declaration has a similar parameter name",
 						arg->token.start, arg->token.end
-					));
+					);
 
 					return;
 				}
@@ -649,11 +649,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		{
 		case Opcode::push: {
 			if (stack_counter >= max_stack_length) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					"stack overflow",
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
@@ -670,11 +670,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 
 		case Opcode::push_const: {
 			if (stack_counter >= max_stack_length) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					"stack overflow",
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
@@ -692,11 +692,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			__debugbreak();
 
 			if (left_obj.callable || right_obj.callable) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					"it is not possible to perform a binary operation with the called object",
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
@@ -709,11 +709,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto left_mathi_obj = static_cast<MathIVariable*>(left_obj.val_ptr);
 
 				if (left_mathi_obj == nullptr || !left_mathi_obj->initialized) {
-					__mathi_make_error(MathIRuntimeError(
+					m_ErrorManager.runtime_error(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					));
+					);
 					return nullptr;
 				}
 
@@ -727,11 +727,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto right_mathi_obj = static_cast<MathIVariable*>(right_obj.val_ptr);
 
 				if (right_mathi_obj == nullptr || !right_mathi_obj->initialized) {
-					__mathi_make_error(MathIRuntimeError(
+					m_ErrorManager.runtime_error(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					));
+					);
 					return nullptr;
 				}
 
@@ -779,11 +779,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				auto left_mathi_obj = static_cast<MathIVariable*>(obj.val_ptr);
 
 				if (left_mathi_obj == nullptr || !left_mathi_obj->initialized) {
-					__mathi_make_error(MathIRuntimeError(
+					m_ErrorManager.runtime_error(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					));
+					);
 					return nullptr;
 				}
 
@@ -817,40 +817,40 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			MathIObject& target_object = *stack[stack_counter - 1];
 
 			if (!target_object.callable) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					"the objects is not callable",
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
 			if (target_object.val_ptr == nullptr) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					"the object has not been initialized",
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
 			if (target_object.val_ptr == nullptr) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					"function has not been initialized",
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
 			MathiIFunction& function = *(MathiIFunction*)target_object.val_ptr;
 
 			if (function.number_of_params != arg_count) {
-				__mathi_make_error(MathIRuntimeError(
+				m_ErrorManager.runtime_error(
 					m_CurrentSrc,
 					std::format("{} arguments are passed to the function instead of {}", arg_count, function.number_of_params),
 					0, m_CurrentSrc.size() - 1
-				));
+				);
 				return nullptr;
 			}
 
@@ -905,11 +905,11 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 				MathIVariable* target_const = (MathIVariable*)target.val_ptr;
 
 				if (target_const == nullptr || !target_const->initialized) {
-					__mathi_make_error(MathIRuntimeError(
+					m_ErrorManager.runtime_error(
 						m_CurrentSrc,
 						"the object has not been initialized",
 						0, m_CurrentSrc.size() - 1
-					));
+					);
 					return nullptr;
 				}
 
@@ -1020,26 +1020,28 @@ double MathI::eval(const std::string& _Str) {
 
 	for (auto& range : divide_into_expr(_Str)) {
 		clear_error();
-
-		std::vector<Token> tokens;
-
-		std::string tmp_src = _Str.substr(range.first, range.second - range.first);
-		Tokenizer::parse(tmp_src, tokens); 
 		
-		if (!__mathi_is_ok()) return 0.0;
+		std::string tmp_src = _Str.substr(range.first, range.second - range.first);
+		m_CurrentSrc = tmp_src;
+
+		std::vector<Token> tokens(tmp_src.size());
+		Tokenizer::parse(tmp_src, tokens, m_ErrorManager); 
+		
+		if (!ok()) return 0.0;
 
 		debug_print_tokens(tokens); 
 		
 		{
-			std::vector<Token> token_array = tokens;
-			rule(token_array, tmp_src); 
+			std::vector<Token> token_array(tokens.size());
+			std::copy(tokens.begin(), tokens.end(), token_array.begin());
+			rule(token_array, tmp_src, m_ErrorManager);
 		}
 
-		if (!__mathi_is_ok()) return 0.0;
+		if (!ok()) return 0.0;
 
 		generate_ast(tokens); 
 
-		print_ast(m_AST);
+		// print_ast(m_AST); __debugbreak();
 
 		// __debugbreak();
 
