@@ -36,7 +36,7 @@ class MathIObject {
 public:
 	bool callable;
 	bool constant;
-	std::string_view name;
+	std::string name;
 	void* val_ptr;
 
 	static inline MathIObject make_const(double _Value) {
@@ -48,7 +48,7 @@ public:
 		};
 	}
 
-	static inline MathIObject make_named_object(const std::string_view& _Name) {
+	static inline MathIObject make_named_object(const std::string& _Name) {
 		return MathIObject{
 			false,
 			false,
@@ -114,11 +114,11 @@ private:
 	std::string m_CurrentSrc;
 
 	size_t get_object_index(const MathIObject& _Obj);
-	size_t get_object_index_by_name(const std::string_view& _Name);
+	size_t get_object_index_by_name(const std::string& _Name);
 
 	void generate_ast(const std::vector<Token>& _Tokens);
 
-	void r_gen_opcode(std::vector<Opcode>&, AST*, const std::vector<std::string_view>& params);
+	void r_gen_opcode(std::vector<Opcode>&, AST*, const std::vector<std::string>& params);
 	void gen_executable();
 
 	void debug_print_opcode(const std::vector<Opcode>& _Opcode);

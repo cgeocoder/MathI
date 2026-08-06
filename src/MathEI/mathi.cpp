@@ -99,7 +99,7 @@ size_t find_func_call_in_range_ast(const std::vector<AST*>& ast, const std::pair
 
 	for (size_t i = range.first; i < range.second - 1; ++i) {
 		if ((ast.at(i)->token.type == expr_var) && (ast.at(i + 1)->token.type == expr_par)) {
-			if (!is_elem_exist(ast, 2))
+			if (!is_elem_exist(ast, i + 2))
 				return i;
 
 			else if (ast.at(i + 2)->token.type != bin_op_assign)
@@ -277,7 +277,7 @@ size_t MathI::get_object_index(const MathIObject& _Obj) {
 		return std::distance(m_Objects.begin(), it);
 }
 
-size_t MathI::get_object_index_by_name(const std::string_view& _Name) {
+size_t MathI::get_object_index_by_name(const std::string& _Name) {
 	auto it = std::find_if(m_Objects.begin(), m_Objects.end(), [&_Name](const MathIObject& obj) {
 		return _Name == obj.name;
 	});
@@ -304,7 +304,7 @@ void MathI::generate_ast(const std::vector<Token>& _Tokens) {
 	m_AST = ast.at(0);
 }
  
-void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vector<std::string_view>& params) {
+void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vector<std::string>& params) {
 	Token& tok = ast->token;
 
 	if (tok.type == TokenType::expr_par) {
@@ -313,7 +313,7 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 	}
 
 	if (tok.type == TokenType::stmt_func_decl) {
-		std::vector<std::string_view> args;
+		std::vector<std::string> args;
 		std::vector<AST*> param_enum;
 
 		if (ast->nodes[0]->nodes[0]->token.type == expr_enum) {
@@ -345,6 +345,10 @@ void MathI::r_gen_opcode(std::vector<Opcode>& opcode, AST* ast, const std::vecto
 
 		r_gen_opcode(function->opcode, ast->nodes.at(1), args);
 		function->opcode.push_back(Opcode::halt);
+
+		std::cout << "\n# <Function '" << tok.value << "'>:\n";
+		debug_print_opcode(function->opcode);
+		std::cout << '\n';
 
 		opcode.push_back(Opcode::push_const);
 		opcode.push_back((Opcode)(size_t)function);
@@ -632,7 +636,7 @@ void MathI::debug_print_opcode(const std::vector<Opcode>& _Opcode) {
 
 void MathI::gen_executable() {
 	opcode.clear();
-	r_gen_opcode(opcode, m_AST, std::vector<std::string_view>());
+	r_gen_opcode(opcode, m_AST, std::vector<std::string>());
 	opcode.push_back(Opcode::halt);
 }
 
@@ -688,8 +692,6 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 			MathIObject& left_obj = *stack[stack_counter - 2];
 			MathIObject& right_obj = *stack[stack_counter - 1];
 			stack_counter -= 1;
-
-			__debugbreak();
 
 			if (left_obj.callable || right_obj.callable) {
 				m_ErrorManager.runtime_error(
@@ -763,7 +765,6 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 
 			stack[stack_counter - 1] = new_obj;
 			i += 1;
-			__debugbreak();
 			break;
 		}
 		case Opcode::un_op: {
@@ -813,7 +814,7 @@ MathIObject* MathI::execute(std::vector<Opcode>& _Opcode) {
 		case Opcode::call: {
 			size_t arg_count = (size_t)inst1;
 			size_t stack_frame = stack_counter - arg_count;
-			__debugbreak();
+
 			MathIObject& target_object = *stack[stack_counter - 1];
 
 			if (!target_object.callable) {
@@ -1024,36 +1025,41 @@ double MathI::eval(const std::string& _Str) {
 		std::string tmp_src = _Str.substr(range.first, range.second - range.first);
 		m_CurrentSrc = tmp_src;
 
-		std::vector<Token> tokens(tmp_src.size());
+		std::vector<Token> tokens;
+		tokens.reserve(tmp_src.size());
 		Tokenizer::parse(tmp_src, tokens, m_ErrorManager); 
 		
 		if (!ok()) return 0.0;
 
-		debug_print_tokens(tokens); 
+		// debug_print_tokens(tokens); 
 		
 		{
-			std::vector<Token> token_array(tokens.size());
+			std::vector<Token> token_array;
+			token_array.resize(tokens.size());
 			std::copy(tokens.begin(), tokens.end(), token_array.begin());
-			rule(token_array, tmp_src, m_ErrorManager);
+
+			rule(token_array, tmp_src, m_ErrorManager); // __debugbreak();
 		}
 
 		if (!ok()) return 0.0;
 
-		generate_ast(tokens); 
+		generate_ast(tokens);//  __debugbreak();
 
-		// print_ast(m_AST); __debugbreak();
+		// print_ast(m_AST);
 
-		// __debugbreak();
-
-		// stack_counter = 0;	
+		stack_counter = 0;	
 		
-		// gen_executable(); __debugbreak();
+		gen_executable();//  __debugbreak();
 
-		// if (!__mathi_is_ok()) return 0.0;
-		// __debugbreak();
-		// MathIObject* obj_res = (MathIObject*)execute(opcode); 
+		if (!ok()) return 0.0;
 
-		// std::cout << "\nResult >> " << get_mathi_object_info(obj_res) << '\n';
+		debug_print_opcode(opcode); // __debugbreak();
+
+		if (!ok()) return 0.0;
+
+		MathIObject* obj_res = (MathIObject*)execute(opcode); 
+		
+		std::cout << "\nResult >> " << get_mathi_object_info(obj_res) << '\n';
 	}
 
 	return 0;
